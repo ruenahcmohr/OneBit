@@ -25,30 +25,40 @@
 /*
 One bit processor - Rues assembler
 
+
 NOP    
-SETB       o
-SETBJMP    o, a
-CLRB       o
-CLRBJMP    o, a
-CPYB    i, o
-CPYBJPS i, o, a
-CPYBJPC i, o, a
-CPYBJMP i, o, a
-INVB    i, o
-INVBJPS i, o, a
-INVBJPC i, o, a
-INVBJMP i, o, a
-JMP           a
-JPS     i     a
-JPC     i     a
-FORK    i, af, at
-WAITS   i
-WAITC   i
 HALT
-SKIPC   i
-SKIPS   i
-REPTC   i
-REPTS   i
+SETB      o
+SETBJMP   o,  a
+CSETB     of, ot
+CLRB      o
+CLRBJMP   o,  a 
+CCLRB     of, ot
+OUTIN     o,  i
+OUTINJMP  o,  i, a
+OUT       o
+OUTJMP    o,  a
+COUTF     of, vf, ot, vt
+IN        i
+INJMP     i,  a
+INJPS     i,  a
+INJPC     i,  a
+CINF      if, it
+JMP       a
+JPS       a
+JPC       a
+FORKF     af, at
+FORKI     i,  af, at
+WAITIS    i
+WAITIC    i
+SKIPIC    i
+SKIPIS    i
+SKIPFC 
+SKIPFS 
+REPTIC    i
+REPTIS    i
+REPTFC 
+REPTFS 
 
 */
 
@@ -58,9 +68,9 @@ REPTS   i
 
 // due to other filtering, a semicolon will never be part of the string, so we can use that.
 // search for ;NMEOMONIC;
-char  * MNEMONICS = ";NOP;SETB;SETBJMP;CLRB;CLRBJMP;CPYB;CPYBJPS;CPYBJPC;CPYBJMP;INVB;INVBJPS;INVBJPC;INVBJMP;JMP;JPS;JPC;FORK;WAITS;WAITC;HALT;SKIPC;SKIPS;REPTC;REPTS;";
-int  ParamCount[] = {  0,  1,    2,      1,   2,      2,    3,      3,       3,    2,   3,       3,      3,    1,  2,  2,   3,   1,    1,    0,   1,    1,   1,     1 };
-enum InstIdx { NOP = 0,SETB,SETBJMP,CLRB,CLRBJMP,CPYB,CPYBJPS,CPYBJPC,CPYBJMP,INVB,INVBJPS,INVBJPC,INVBJMP,JMP,JPS,JPC,FORK,WAITS,WAITC,HALT,SKIPC,SKIPS,REPTC,REPTS };
+char  * MNEMONICS = ";NOP;HALT;SETB;SETBJMP;CSETB;CLRB;CLRBJMP;CCLRB;OUTIN;OUTINJMP;OUT;OUTJMP;COUTF;IN;INJMP;INJPS;INJPC;CINF;JMP;JPS;JPC;FORKF;FORKI;WAITIS;WAITIC;SKIPIC;SKIPIS;SKIPFC;SKIPFS;REPTIC;REPTIS;REPTFC;REPTFS;";
+int  ParamCount[] = {  0,  0,   1,     2,     2,    1,    2,      2,    2,     3,     1,  2,     4,   1,   2,   2,    2,    2,  1,   1,  1,  2,    3,     1,    1,      1,     1,     0,     0,    1,      1,     0,     0  };
+enum InstIdx { NOP = 0,HALT,SETB,SETBJMP,CSETB,CLRB,CLRBJMP,CCLRB,OUTIN,OUTINJMP,OUT,OUTJMP,COUTF,IN,INJMP,INJPS,INJPC,CINF,JMP,JPS,JPC,FORKF,FORKI,WAITIS,WAITIC,SKIPIC,SKIPIS,SKIPFC,SKIPFS,REPTIC,REPTIS,REPTFC,REPTFS };
 
 
 typedef struct opcode_s {  
@@ -181,11 +191,11 @@ int assemble(FILE *input, FILE *out, varlist_t *llabels ) {
       } else if (tokLine[strlen(tokLine)-1] == ':') {
       } else {
     
-        for(i = 0; tokLine && (i<5); i++) {
+        for(i = 0; tokLine && (i<6); i++) {
          arg[i] = strdup(tokLine);
          tokLine = strtok(NULL, " "); 
         }
-        if (i == 5) printf ("More than 5 params on an instruction? you insane dog, what are you up to?, Line %d\n", LineNum);        
+        if (i == 6) printf ("More than 5 params on an instruction? you insane dog, what are you up to?, Line %d\n", LineNum);        
         arg[i] = NULL;
         
         buildInstruction(&inst, arg, address, llabels); 
@@ -228,12 +238,13 @@ int str2Inst(char * s) {
   
   asprintf(&p, ";%s;", s);    // pad token for search, this ensures no partial tokens are found. 
     
-  if ((offset = strcasestr(MNEMONICS, p)) == NULL) {
+  if ((offset = strcasestr(MNEMONICS, p)) == NULL) {    
     free(p);
     return -1;
   } else {   
-    free(p);         
-    return  25-countOff(offset, 0);    
+    free(p); 
+//    printf(">>%d<<", countOff(offset, 0));      
+    return  34-countOff(offset, 0);    
   }
 
 }
@@ -274,30 +285,34 @@ int buildInstruction(opcode_t *OP, char ** strings, uint8_t address, varlist_t *
    argCount++;   
   }    
       
-  printf("%s ",  strings[0] );
-  for (i = 0; i < argCount; i++) printf(" 0x%02X ", v8[i+1]);      
+   
   if (argCount != ParamCount[nmNumber]) printf("Wrong number of arguments, Line %d\n", LineNum);
 
-
+  // default NOP
+  OP->FInstruction = OpAssemble( I_NULL , O_NULL, 1 );
+  OP->TInstruction = OP->FInstruction;
+  OP->FAddress = address+1;             // default to next address
+  OP->TAddress = OP->FAddress;
+  
   switch(nmNumber) {
+
     case NOP:
-      if ((t = OpAssemble( I_NULL , O_NULL, 1 )) < 0 ) return -1;
+    break;
+
+    case HALT:      
+      if ((t = OpAssemble( I_NULL , O_NULL, 0 )) < 0 ) return -1;
       
       OP->FInstruction = t;
       OP->TInstruction = OP->FInstruction;
-      OP->FAddress = address+1;
-      OP->TAddress = OP->FAddress;
-      
+      OP->FAddress = address;
+      OP->TAddress = OP->FAddress;  
     break;
 
     case SETB:
-      if ((t = OpAssemble( I_NULL , v8[1], 1 )) < 0 ) return -1;
+      if ((t = OpAssemble( I_NULL , v8[1], 1 )) < 0 ) return -1;      
       
-      OP->FInstruction = t;
-      OP->TInstruction = OP->FInstruction;
-      OP->FAddress = address+1;
-      OP->TAddress = OP->FAddress;      
-            
+      OP->FInstruction = t;            
+      OP->TInstruction = OP->FInstruction;                  
     break;
 
     case SETBJMP:
@@ -309,13 +324,19 @@ int buildInstruction(opcode_t *OP, char ** strings, uint8_t address, varlist_t *
       OP->TAddress = OP->FAddress;   
     break;
 
+    case CSETB:
+      if ((t = OpAssemble( I_NULL , v8[1], 1 )) < 0 ) return -1;
+      OP->TInstruction = t;  
+       
+      if ((t = OpAssemble( I_NULL , v8[2], 1 )) < 0 ) return -1;
+      OP->FInstruction = t;                           
+    break;
+
     case CLRB:
       if ((t = OpAssemble( I_NULL , v8[1], 0 )) < 0 ) return -1;
       
       OP->FInstruction = t;
       OP->TInstruction = OP->FInstruction;
-      OP->FAddress = address+1;
-      OP->TAddress = OP->FAddress;   
     break;
 
     case CLRBJMP:
@@ -327,92 +348,93 @@ int buildInstruction(opcode_t *OP, char ** strings, uint8_t address, varlist_t *
       OP->TAddress = OP->FAddress; 
     break;
 
-    case CPYB:
-      if ((t = OpAssemble( v8[1] , v8[2], 0 )) < 0 ) return -1;      
+    case CCLRB:
+      if ((t = OpAssemble( I_NULL , v8[1], 0 )) < 0 ) return -1;
+      OP->TInstruction = t;   
+      
+      if ((t = OpAssemble( I_NULL , v8[2], 0 )) < 0 ) return -1;
+      OP->FInstruction = t;                     
+    break;
+
+    case OUTIN:
+      if ((t = OpAssemble( v8[2] , v8[1], 0 )) < 0 ) return -1;      
       OP->FInstruction = t;
       
-      if ((t = OpAssemble( v8[1] , v8[2], 1 )) < 0 ) return -1;
-      OP->TInstruction = t;
+      if ((t = OpAssemble( v8[2] , v8[1], 1 )) < 0 ) return -1;
+      OP->TInstruction = t;      
+    break;
+
+    case OUTINJMP:
+      if ((t = OpAssemble( v8[2] , v8[1], 0 )) < 0 ) return -1;      
+      OP->FInstruction = t;
       
-      OP->FAddress = address+1;
+      if ((t = OpAssemble( v8[2] , v8[1], 1 )) < 0 ) return -1;
+      OP->TInstruction = t;     
+      OP->FAddress = v8[3];
+      OP->TAddress = OP->FAddress;
+    break;
+
+    case OUT:
+      if ((t = OpAssemble( I_NULL , v8[1], 0 )) < 0 ) return -1;      
+      OP->FInstruction = t;
+      
+      if ((t = OpAssemble( I_NULL , v8[1], 1 )) < 0 ) return -1;
+      OP->TInstruction = t;      
+    break;
+
+    case OUTJMP:
+      if ((t = OpAssemble( I_NULL , v8[1], 0 )) < 0 ) return -1;      
+      OP->FInstruction = t;
+      
+      if ((t = OpAssemble( I_NULL , v8[1], 1 )) < 0 ) return -1;
+      OP->TInstruction = t;    
+      
+      OP->FAddress = v8[2];
       OP->TAddress = OP->FAddress;  
     break;
 
-    case CPYBJPS:
-      if ((t = OpAssemble( v8[1] , v8[2], 0 )) < 0 ) return -1;      
-      OP->FInstruction = t;
-      
-      if ((t = OpAssemble( v8[1] , v8[2], 1 )) < 0 ) return -1;
-      OP->TInstruction = t;
-      
-      OP->FAddress = address+1;
-      OP->TAddress = v8[3];  
+    case COUTF: // COUTF  of, vf, ot, vt
+     if ((t = OpAssemble( I_NULL , v8[1], v8[2] )) < 0 ) return -1;
+     OP->FInstruction = t;
+     
+     if ((t = OpAssemble( I_NULL , v8[3], v8[4] )) < 0 ) return -1;
+     OP->TInstruction = t;       
     break;
 
-    case CPYBJPC:
-      if ((t = OpAssemble( v8[1] , v8[2], 0 )) < 0 ) return -1;      
-      OP->FInstruction = t;
-      
-      if ((t = OpAssemble( v8[1] , v8[2], 1 )) < 0 ) return -1;
-      OP->TInstruction = t;
-
-      OP->FAddress = v8[3];        
-      OP->TAddress = address+1;
+    case IN:
+     if ((t = OpAssemble( v8[1] , O_NULL, 1 )) < 0 ) return -1;
+     OP->FInstruction = t;
+     OP->TInstruction = OP->FInstruction;
     break;
 
-    case CPYBJMP:
-      if ((t = OpAssemble( v8[1] , v8[2], 0 )) < 0 ) return -1;      
-      OP->FInstruction = t;
-      
-      if ((t = OpAssemble( v8[1] , v8[2], 1 )) < 0 ) return -1;
-      OP->TInstruction = t;
-      
-      OP->FAddress = v8[3];
-      OP->TAddress = OP->FAddress;   
+    case INJMP:
+     if ((t = OpAssemble( v8[1] , O_NULL, 1 )) < 0 ) return -1;
+     OP->FInstruction = t;
+     OP->TInstruction = OP->FInstruction;
+     OP->FAddress = v8[2];
+     OP->TAddress = OP->FAddress; 
     break;
 
-    case INVB:
-      if ((t = OpAssemble( v8[1] , v8[2], 1 )) < 0 ) return -1;      
-      OP->FInstruction = t;
-      
-      if ((t = OpAssemble( v8[1] , v8[2], 0 )) < 0 ) return -1;
-      OP->TInstruction = t;
-      
-      OP->FAddress = address+1;
-      OP->TAddress = OP->FAddress;  
+    case INJPS:
+     if ((t = OpAssemble( v8[1] , O_NULL, 1 )) < 0 ) return -1;
+     OP->FInstruction = t;
+     OP->TInstruction = OP->FInstruction;
+     OP->TAddress     = v8[2];
     break;
 
-    case INVBJPS:
-      if ((t = OpAssemble( v8[1] , v8[2], 1 )) < 0 ) return -1;      
-      OP->FInstruction = t;
-      
-      if ((t = OpAssemble( v8[1] , v8[2], 0 )) < 0 ) return -1;
-      OP->TInstruction = t;
-      
-      OP->FAddress = address+1;
-      OP->TAddress = v8[3];  
+    case INJPC:
+     if ((t = OpAssemble( v8[1] , O_NULL, 1 )) < 0 ) return -1;
+     OP->FInstruction = t;
+     OP->TInstruction = OP->FInstruction;
+     OP->FAddress     = v8[2];
     break;
 
-    case INVBJPC:
-      if ((t = OpAssemble( v8[1] , v8[2], 1 )) < 0 ) return -1;      
-      OP->FInstruction = t;
-      
-      if ((t = OpAssemble( v8[1] , v8[2], 0 )) < 0 ) return -1;
-      OP->TInstruction = t;
-      
-      OP->FAddress = v8[3];
-      OP->TAddress = address+1;  
-    break;
-
-    case INVBJMP:
-      if ((t = OpAssemble( v8[1] , v8[2], 1 )) < 0 ) return -1;      
-      OP->FInstruction = t;
-      
-      if ((t = OpAssemble( v8[1] , v8[2], 0 )) < 0 ) return -1;
-      OP->TInstruction = t;
-      
-      OP->FAddress = v8[3];
-      OP->TAddress = OP->FAddress;  
+    case CINF:
+     if ((t = OpAssemble( v8[1] , O_NULL, 1 )) < 0 ) return -1;
+     OP->FInstruction = t;
+     
+     if ((t = OpAssemble( v8[2] , O_NULL, 1 )) < 0 ) return -1;
+     OP->TInstruction = t;
     break;
 
     case JMP:
@@ -425,24 +447,19 @@ int buildInstruction(opcode_t *OP, char ** strings, uint8_t address, varlist_t *
     break;
 
     case JPS:
-      if ((t = OpAssemble( v8[1] , O_NULL, 1 )) < 0 ) return -1;
-      
-      OP->FInstruction = t;
-      OP->TInstruction = OP->FInstruction;
-      OP->FAddress = address+1;
-      OP->TAddress = v8[2]; 
+      OP->TAddress = v8[1]; 
     break;
 
     case JPC:
-      if ((t = OpAssemble( v8[1] , O_NULL, 1 )) < 0 ) return -1;
-      
-      OP->FInstruction = t;
-      OP->TInstruction = OP->FInstruction;
-      OP->FAddress = v8[2]; 
-      OP->TAddress = address+1;
+      OP->FAddress = v8[1]; 
     break;
 
-    case FORK:
+    case FORKF:
+      OP->FAddress = v8[1]; 
+      OP->TAddress = v8[2];
+    break;
+
+    case FORKI:
       if ((t = OpAssemble( v8[1] , O_NULL, 1 )) < 0 ) return -1;
       
       OP->FInstruction = t;
@@ -451,73 +468,77 @@ int buildInstruction(opcode_t *OP, char ** strings, uint8_t address, varlist_t *
       OP->TAddress = v8[3];
     break;
 
-    case WAITS:
+    case WAITIS:
       if ((t = OpAssemble( v8[1] , O_NULL, 1 )) < 0 ) return -1;
       
       OP->FInstruction = t;
       OP->TInstruction = OP->FInstruction;
       OP->FAddress = address;
-      OP->TAddress = address+1; 
     break;
 
-    case WAITC:
+    case WAITIC:
       if ((t = OpAssemble( v8[1] , O_NULL, 1 )) < 0 ) return -1;
       
       OP->FInstruction = t;
       OP->TInstruction = OP->FInstruction;
-      OP->FAddress = address+1;
       OP->TAddress = address; 
     break;
 
-    case HALT:      
-      if ((t = OpAssemble( I_NULL , O_NULL, 0 )) < 0 ) return -1;
-      
-      OP->FInstruction = t;
-      OP->TInstruction = OP->FInstruction;
-      OP->FAddress = address;
-      OP->TAddress = OP->FAddress;  
-    break;
-
-    case SKIPC:
+    case SKIPIC:
       if ((t = OpAssemble( v8[1] , O_NULL, 1 )) < 0 ) return -1;
       
       OP->FInstruction = t;
       OP->TInstruction = OP->FInstruction;
       OP->FAddress = address+2;
-      OP->TAddress = address+1; 
     break;
 
-    case SKIPS:
+    case SKIPIS:
       if ((t = OpAssemble( v8[1] , O_NULL, 1 )) < 0 ) return -1;
       
       OP->FInstruction = t;
       OP->TInstruction = OP->FInstruction;
-      OP->FAddress = address+1;
       OP->TAddress = address+2; 
     break;
 
-    case REPTC:
+    case SKIPFC:
+      OP->FAddress = address+2;
+    break;
+
+    case SKIPFS:
+      OP->TAddress = address+2;
+    break;
+
+    case REPTIC:
       if ((t = OpAssemble( v8[1] , O_NULL, 1 )) < 0 ) return -1;
       
       OP->FInstruction = t;
       OP->TInstruction = OP->FInstruction;
       OP->FAddress = address-1;
-      OP->TAddress = address+1; 
     break;
 
-    case REPTS:
-
+    case REPTIS:
       if ((t = OpAssemble( v8[1] , O_NULL, 1 )) < 0 ) return -1;
       
       OP->FInstruction = t;
       OP->TInstruction = OP->FInstruction;
-      OP->FAddress = address+1;
       OP->TAddress = address-1; 
     break;
+
+    case REPTFC:
+      OP->FAddress = address-1;
+    break;
+
+    case REPTFS:
+      OP->TAddress = address-1; 
+    break;
+
   
   }
-  printf(" %02X-%02X-%02X-%02X ", OP->FInstruction, OP->FAddress , OP->TInstruction , OP->TAddress );
-
+  printf("%02X %02X %02X %02X  ", OP->FInstruction, OP->FAddress , OP->TInstruction , OP->TAddress );
+  
+  printf("%9s ",  strings[0] );
+  for (i = 0; i < argCount; i++) printf("0x%02X ", v8[i+1]);   
+  
   printf("\n");                            
   
   for( i = 0; strings[i]; i++) {   free(strings[i]); strings[i] = NULL;  }
@@ -533,7 +554,9 @@ int OpAssemble(uint8_t input, uint8_t output, uint8_t D ) {
 
   if ( input > 7 ) { printf("Input value out of range (0-7), Line %d\n", LineNum);  return -1;}
   if ( output > 7) { printf("Output value out of range (0-7), Line %d\n", LineNum); return -2;}
-  printf("{ IN:%d OUT:%d, %02X }", input, output, ((D==0)?0:(1<<6)) );
+  if ( D > 1)      { printf("Data value out of range (0-1), Line %d\n", LineNum);   return -3;}
+ // printf("{ IN:%d OUT:%d, %d }", input, output, ((D==0)?0:1) );
+  
   return (input | (output << 3) | ((D==0)?0:(1<<6))); // I wanted to make sure D would always interpret correctly.
 
 }
