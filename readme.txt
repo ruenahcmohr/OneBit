@@ -1,8 +1,8 @@
 To compile the assembler:  gcc *.c -o 1bit-as
 To assemble with it:  1bit-as test1.asm
   output is in output.bin
-To burn with minipro: 
-
+To burn with minipro to a 28C64 eeprom: 
+  minipro -p AT28C64 -s -w output.bin
 
 coding:
   use uppercase
