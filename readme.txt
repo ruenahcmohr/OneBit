@@ -5,6 +5,11 @@ Label:
 
 ; comment
 
+WISHLIST
+
+(test)
+OUTI O   output compliment of F
+OUTIJMP O
 
 --------------------------------------------
 ** By reading this you are liable for your own mental damage caused by trying to understand the
@@ -28,7 +33,11 @@ CCLRB    o, o
 
 OUTIN    o, i
 OUTINJMP o, i, a 
+OUTV     o, v
+OUTVJMP  o, v, a
 OUT      o
+OUTI     o
+OUTIJMP  o, a
 OUTJMP   o, a
 COUTF    o, v, o, v
 
@@ -172,11 +181,37 @@ OUTINJMP  o, i, a
 
 -------------------------------------------------------------------------
 
+OUTV  o, v
+  test 7, write v to o, jump A+1
+  test 7, write v to o, jump A+1
+  
+  write the value v to output o
+  
+-------------------------------------------------------------------------
+
+OUTVJMP  o, v, a
+  test 7, write v to o, jump a
+  test 7, write v to o, jump a
+  
+  write the value v to output o, jump to a
+  
+
+-------------------------------------------------------------------------
+
 OUT  o
   test 7, set o, jump A+1
   test 7, clear o, jump A+1
   
   write the value of the F register to output o
+  
+-------------------------------------------------------------------------
+
+OUTI  o
+  test 7, clear o, jump A+1
+  test 7, set o, jump A+1
+  
+  write the inverse value of the F register to output o
+
     
 -------------------------------------------------------------------------
 
@@ -185,6 +220,14 @@ OUTJMP  o, a
   test 7, clear o, jump a
   
   write the value of the F register to output o, and jump to address  a
+
+-------------------------------------------------------------------------
+
+OUTIJMP  o, a
+  test 7, clear o, jump a
+  test 7, set o, jump a
+  
+  write the inverse value of the F register to output o, and jump to address  a
 
 -------------------------------------------------------------------------
 

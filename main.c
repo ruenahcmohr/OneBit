@@ -36,7 +36,11 @@ CLRBJMP   o,  a
 CCLRB     of, ot
 OUTIN     o,  i
 OUTINJMP  o,  i, a
+OUTV      o, v
+OUTVJMP   o, v, a
 OUT       o
+OUTI      o
+OUTIJMP   o,  a
 OUTJMP    o,  a
 COUTF     of, vf, ot, vt
 IN        i
@@ -60,17 +64,21 @@ REPTIS    i
 REPTFC 
 REPTFS 
 
+Tips:
+  - there are no actual commas in the source
+  - dont put instructions on the same line as labels
+
 */
 
 #define I_NULL 7
 #define O_NULL 7
 
-
+#define INSTCOUNT 38
 // due to other filtering, a semicolon will never be part of the string, so we can use that.
 // search for ;NMEOMONIC;
-char  * MNEMONICS = ";NOP;HALT;SETB;SETBJMP;CSETB;CLRB;CLRBJMP;CCLRB;OUTIN;OUTINJMP;OUT;OUTJMP;COUTF;IN;INJMP;INJPS;INJPC;CINF;JMP;JPS;JPC;FORKF;FORKI;WAITIS;WAITIC;SKIPIC;SKIPIS;SKIPFC;SKIPFS;REPTIC;REPTIS;REPTFC;REPTFS;";
-int  ParamCount[] = {  0,  0,   1,     2,     2,    1,    2,      2,    2,     3,     1,  2,     4,   1,   2,   2,    2,    2,  1,   1,  1,  2,    3,     1,    1,      1,     1,     0,     0,    1,      1,     0,     0  };
-enum InstIdx { NOP = 0,HALT,SETB,SETBJMP,CSETB,CLRB,CLRBJMP,CCLRB,OUTIN,OUTINJMP,OUT,OUTJMP,COUTF,IN,INJMP,INJPS,INJPC,CINF,JMP,JPS,JPC,FORKF,FORKI,WAITIS,WAITIC,SKIPIC,SKIPIS,SKIPFC,SKIPFS,REPTIC,REPTIS,REPTFC,REPTFS };
+char  * MNEMONICS = ";NOP;HALT;SETB;SETBJMP;CSETB;CLRB;CLRBJMP;CCLRB;OUTIN;OUTINJMP;OUTV;OUTVJMP;OUT;OUTI;OUTIJMP;OUTJMP;COUTF;IN;INJMP;INJPS;INJPC;CINF;JMP;JPS;JPC;FORKF;FORKI;WAITIS;WAITIC;SKIPIC;SKIPIS;SKIPFC;SKIPFS;REPTIC;REPTIS;REPTFC;REPTFS;";
+int  ParamCount[] = {  0,  0,   1,     2,     2,    1,    2,      2,    2,     3,     2,    3,    1,   1,  2,       2,     4,   1,   2,   2,    2,    2,  1,   1,  1,  2,    3,     1,    1,      1,     1,     0,     0,    1,      1,     0,     0  };
+enum InstIdx { NOP = 0,HALT,SETB,SETBJMP,CSETB,CLRB,CLRBJMP,CCLRB,OUTIN,OUTINJMP,OUTV,OUTVJMP,OUT,OUTI,OUTIJMP,OUTJMP,COUTF,IN,INJMP,INJPS,INJPC,CINF,JMP,JPS,JPC,FORKF,FORKI,WAITIS,WAITIC,SKIPIC,SKIPIS,SKIPFC,SKIPFS,REPTIC,REPTIS,REPTFC,REPTFS };
 
 
 typedef struct opcode_s {  
@@ -244,7 +252,7 @@ int str2Inst(char * s) {
   } else {   
     free(p); 
 //    printf(">>%d<<", countOff(offset, 0));      
-    return  34-countOff(offset, 0);    
+    return  INSTCOUNT-countOff(offset, 0);    
   }
 
 }
@@ -374,11 +382,30 @@ int buildInstruction(opcode_t *OP, char ** strings, uint8_t address, varlist_t *
       OP->TAddress = OP->FAddress;
     break;
 
+    case OUTV:
+      if ((t = OpAssemble( I_NULL , v8[1], v8[2] )) < 0 ) return -1;      
+      OP->FInstruction = OP->TInstruction = t;      
+    break;
+    
+    case OUTVJMP:
+      if ((t = OpAssemble( I_NULL , v8[1], v8[2] )) < 0 ) return -1;      
+      OP->FInstruction = OP->TInstruction = t;   
+      OP->FAddress = OP->TAddress = v8[3];         
+    break;    
+
     case OUT:
       if ((t = OpAssemble( I_NULL , v8[1], 0 )) < 0 ) return -1;      
       OP->FInstruction = t;
       
       if ((t = OpAssemble( I_NULL , v8[1], 1 )) < 0 ) return -1;
+      OP->TInstruction = t;      
+    break;
+    
+    case OUTI:
+      if ((t = OpAssemble( I_NULL , v8[1], 1 )) < 0 ) return -1;      
+      OP->FInstruction = t;
+      
+      if ((t = OpAssemble( I_NULL , v8[1], 0 )) < 0 ) return -1;
       OP->TInstruction = t;      
     break;
 
@@ -392,6 +419,17 @@ int buildInstruction(opcode_t *OP, char ** strings, uint8_t address, varlist_t *
       OP->FAddress = v8[2];
       OP->TAddress = OP->FAddress;  
     break;
+    
+    case OUTIJMP:
+      if ((t = OpAssemble( I_NULL , v8[1], 1 )) < 0 ) return -1;      
+      OP->FInstruction = t;
+      
+      if ((t = OpAssemble( I_NULL , v8[1], 0 )) < 0 ) return -1;
+      OP->TInstruction = t;    
+      
+      OP->FAddress = v8[2];
+      OP->TAddress = OP->FAddress;  
+    break;    
 
     case COUTF: // COUTF  of, vf, ot, vt
      if ((t = OpAssemble( I_NULL , v8[1], v8[2] )) < 0 ) return -1;
@@ -557,7 +595,7 @@ int OpAssemble(uint8_t input, uint8_t output, uint8_t D ) {
   if ( D > 1)      { printf("Data value out of range (0-1), Line %d\n", LineNum);   return -3;}
  // printf("{ IN:%d OUT:%d, %d }", input, output, ((D==0)?0:1) );
   
-  return (input | (output << 3) | ((D==0)?0:(1<<6))); // I wanted to make sure D would always interpret correctly.
+  return (input | (output << 3) | ((D==0)?0:(1<<6))); // I wanted to make sure D would always interpret correctly ok?.
 
 }
 
