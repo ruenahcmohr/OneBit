@@ -1,4 +1,20 @@
+To compile the assembler:  gcc *.c -o 1bit-as
+To assemble with it:  1bit-as test1.asm
+  output is in output.bin
+To burn with minipro: 
 
+
+coding:
+  use uppercase
+  dont put instructions on lines with labels
+  There are no actual commas, 
+    SETBJMP 4 JUMPDEST
+  See examples and test programs.  
+  
+  twitter @ruenahcmohr
+    
+
+------------------
 
 
 Label:
@@ -12,8 +28,8 @@ OUTI O   output compliment of F
 OUTIJMP O
 
 --------------------------------------------
-** By reading this you are liable for your own mental damage caused by trying to understand the
- repercussions of this instruction set. **
+** By reading this you are liable for your own mental damage caused by trying to understand 
+ this instruction set. **
 
 
 -- machine set
