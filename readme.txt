@@ -21,11 +21,26 @@ Label:
 
 ; comment
 
+NAME EQU VALUE
+  where value is either a number of the name of something previously defined.
+  example PI EQU 3
+  no equations or math or junk, just values.
+  
+NAME EQU
+   delete value 'name'
+   
+
+
+
 WISHLIST
 
 (test)
 OUTI O   output compliment of F
 OUTIJMP O
+
+
+JPV  i, v, a  ; jump if input is value
+JPNV i, v, a  ; jump if input is not value
 
 --------------------------------------------
 ** By reading this you are liable for your own mental damage caused by trying to understand 
@@ -92,6 +107,7 @@ REPTFS
 a: 8 bit address
 i: 3 bit input
 o: 3 bit output
+v: 1 bit value
 
 RESET: 0x00
 

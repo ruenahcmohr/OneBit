@@ -206,15 +206,15 @@ int assemble(FILE *input, FILE *out, varlist_t *llabels ) {
         if (i == 6) printf ("More than 5 params on an instruction? you insane dog, what are you up to?, Line %d\n", LineNum);        
         arg[i] = NULL;
         
-        buildInstruction(&inst, arg, address, llabels); 
+        if (buildInstruction(&inst, arg, address, llabels) > 0) {
         
-        fputc(inst.FInstruction, out);
-        fputc(inst.FAddress, out);
-        fputc(inst.TInstruction, out);
-        fputc(inst.TAddress, out);  
+          fputc(inst.FInstruction, out);
+          fputc(inst.FAddress, out);
+          fputc(inst.TInstruction, out);
+          fputc(inst.TAddress, out);  
         
-        address++;
-
+          address++;
+        }
       }
       // next line here
     }
@@ -275,13 +275,7 @@ int buildInstruction(opcode_t *OP, char ** strings, uint8_t address, varlist_t *
  OP->FAddress     = 0;
  OP->TAddress     = 0;
  
- printf("0x%02X: ", address);
- 
- 
-  if ((nmNumber = str2Inst(strings[0])) == -1) {
-    printf("Unknown mnemonic %s on line %d\n", strings[0], LineNum);
-    return -1;
-  } 
+
   
   argCount = 0;
   for( i = 1; strings[i] && (i<5); i++) {
@@ -292,9 +286,27 @@ int buildInstruction(opcode_t *OP, char ** strings, uint8_t address, varlist_t *
    }     
    argCount++;   
   }    
-      
+  
+  if (argCount == 0) return -1;
+  
+  if ((nmNumber = str2Inst(strings[0])) == -1) {
+  // check for equ here
+    if (argCount > 1) {
+      if (strcasecmp("EQU", strings[1]) == 0) {
+        if (argCount == 2) { setVar(llabels, strings[0], v8[2], 0); }
+	else {               delVar(llabels, strings[0]); }
+	return 0;
+      }
+    }
+  
+    printf("Unknown mnemonic %s on line %d\n", strings[0], LineNum);
+    return -1;
+  }   
+        
    
   if (argCount != ParamCount[nmNumber]) printf("Wrong number of arguments, Line %d\n", LineNum);
+
+ printf("0x%02X: ", address);
 
   // default NOP
   OP->FInstruction = OpAssemble( I_NULL , O_NULL, 1 );
@@ -580,7 +592,7 @@ int buildInstruction(opcode_t *OP, char ** strings, uint8_t address, varlist_t *
   printf("\n");                            
   
   for( i = 0; strings[i]; i++) {   free(strings[i]); strings[i] = NULL;  }
-
+  return 1;
 }
 
 
