@@ -1,21 +1,44 @@
-To compile the assembler:  gcc *.c -o 1bit-as
-To assemble with it:  1bit-as test1.asm
-  output is in output.bin
-To burn with minipro to a 28C64 eeprom: 
-  minipro -p AT28C64 -s -w output.bin
+   1 bit ROM based controller
+   
+ Based on https://laughtonelectronics.com/Arcana/One-bit%20computer/One-bit%20computer.html
 
-coding:
-  use uppercase
-  dont put instructions on lines with labels
-  There are no actual commas, 
-    SETBJMP 4 JUMPDEST
-  See examples and test programs.  
+----------------------
+
+Features:
+  - Every instruction is single cycle.
+  - it can do like a lot of MIPS.
+  - Tips out at over 4MHz, thats faster than a 6502!
+  - 7 one bit inputs
+  - 7 one bit outputs
+  - 37 powerfully psychedelic 32 bit instructions
+  - Simple hardware architecture using high-availability components.
+  - A flag register.
+  - None of those bothersome interrupt things.
+  - Programmable with up to 256 instructions.
   
-  twitter @ruenahcmohr
+-----------------------
+
+Compiling the assembler:
+  To compile the assembler:  gcc *.c -o 1bit-as
+  To assemble with it:  1bit-as test1.asm
+    output is in output.bin
+  To burn with minipro to a 28C64 eeprom: 
+    minipro -p AT28C64 -s -w output.bin
     
 
 ------------------
-
+Coding:
+  - use uppercase
+  - dont put instructions on lines with labels
+  - There are no actual commas, 
+    SETBJMP 4 JUMPDEST
+  - See examples and test programs.  
+  - The reset vector is 0x00.
+  
+  twitter @ruenahcmohr
+  
+  
+  
 
 Label:
 
@@ -30,98 +53,133 @@ NAME EQU
    delete value 'name'
    
 
+--------------------
+WISHLIST:
 
-
-WISHLIST
-
-(test)
-OUTI O   output compliment of F
-OUTIJMP O
 
 
 JPV  i, v, a  ; jump if input is value
 JPNV i, v, a  ; jump if input is not value
 
 --------------------------------------------
-** By reading this you are liable for your own mental damage caused by trying to understand 
- this instruction set. **
+
+           ** By reading this you are liable for your own mental damage 
+                  caused by trying to understand  this instruction set. **
 
 
--- machine set
+Instructions:
 
-NOP             
-HALT  
+  This machine only actually has one micro instruction. 
+  
+  Effectivly, for the purposes of programming the following occurs:
+    - the output is written
+    - an input is read to the F register
+    - an address is jumped to
 
--- mostly io set
+  Machine Instruction:
+    if F false: [ I, O ] [ jump ]
+    if F true:  [ I, O ] [ jump ] 
 
-SETB     o       
-SETBJMP  o, a  
-CSETB    o, o  
+  Order of operations:
+    (latch input and outputs), jump
+    The value output depends on the status of the F register from the previous instruction.
 
-CLRB     o       
-CLRBJMP  o, a      
-CCLRB    o, o
+--------------------------------------------
 
-OUTIN    o, i
-OUTINJMP o, i, a 
-OUTV     o, v
-OUTVJMP  o, v, a
-OUT      o
-OUTI     o
-OUTIJMP  o, a
-OUTJMP   o, a
-COUTF    o, v, o, v
-
-IN       i
-INJMP    i, a
-INJPS    i, a
-INJPC    i, a
-CINF     i, i
-
--- mostly flow control set
-
-JMP      a     
-JPS      a       
-JPC      a      
- 
-FORKF    af, at
-FORKI    i, af, at
-
-WAITIS   i  
-WAITIC   i  
-
-SKIPIC   i
-SKIPIS   i
-
-SKIPFC   
-SKIPFS  
-
-REPTIC   i
-REPTIS   i
- 
-REPTFC   
-REPTFS   
-                                                    
+Instruction summary:
 
 
-a: 8 bit address
-i: 3 bit input
-o: 3 bit output
-v: 1 bit value
-
-RESET: 0x00
+  a: 8 bit address
+  i: 3 bit input address
+  o: 3 bit output address
+  v: 1 bit value
 
 
-Machine Instruction:
-  F false [ I, O ] [ jump ]
-  F true  [ I, O ] [ jump ]
+  -- machine set
 
-Order of operations:
-  (latch input and outputs), jump
-  Therefore an output cannot depend on an input done on the same instruction
+  NOP             
+  HALT  
+
+  -- mostly io set
+
+  SETB     o       
+  SETBJMP  o, a  
+  CSETB    o, o  
+
+  CLRB     o       
+  CLRBJMP  o, a      
+  CCLRB    o, o
+
+  OUTIN    o, i
+  OUTINJMP o, i, a 
+  OUTV     o, v
+  OUTVJMP  o, v, a
+  OUT      o
+  OUTI     o
+  OUTIJMP  o, a
+  OUTJMP   o, a
+  COUTF    o, v, o, v
+
+  IN       i
+  INJMP    i, a
+  INJPS    i, a
+  INJPC    i, a
+  CINF     i, i
+
+  -- mostly flow control set
+
+  JMP      a     
+  JPS      a       
+  JPC      a      
+
+  FORKF    af, at
+  FORKI    i, af, at
+
+  WAITIS   i  
+  WAITIC   i  
+
+  SKIPIC   i
+  SKIPIS   i
+
+  SKIPFC   
+  SKIPFS  
+
+  REPTIC   i
+  REPTIS   i
+
+  REPTFC   
+  REPTFS   
+  
+  -- math / ALU instructions
+  
+  
 
 
+===================================================================
 
+Instruction set details:
+
+ The format of these instruction details is as follows:
+  
+Instruction_name
+    if F false: Bit read to F register, Output operation performed*, address jumped to
+    if F true:  Bit read to F register, Output operation performed*, address jumped to
+
+    detailed description of instruction.
+
+   * The output operation depends on the old F value, not the new one.
+
+
+ F is the flag register. (data bus)
+ A is the 'current address'
+ NC is the No Connect output (used to indicate if the system has halted)
+ Input 7 is the loopback input. Reading this will not modify the F register.
+
+ arguments:
+ a: 8 bit address
+ i: 3 bit input
+ o: 3 bit output
+ v: 1 bit value
 
 -------------------------------------------------------------------------
 
@@ -145,42 +203,47 @@ HALT
 -------------------------------------------------------------------------
 
 SETB o
-  test 7, set O, jump A+1
-  test 7, set O, jump A+1
+  test 7, set o, jump A+1
+  test 7, set o, jump A+1
 
+  (set bit)
   Set output bit o
 
 -------------------------------------------------------------------------
 
 SETBJMP o, a
-  test 7, set O, jump a
-  test 7, set O, jump a
+  test 7, set o, jump a
+  test 7, set o, jump a
 
+  (set bit, jump)
   Set output bit o. Jump to a
 
 -------------------------------------------------------------------------
 
 CSETB of, ot
-  test 7, set Of, jump A+1
-  test 7, set Ot, jump A+1
+  test 7, set of, jump A+1
+  test 7, set ot, jump A+1
 
+  (conditional set bit)
   If F is clear, set bit Of
   If F is set,   set bit Ot
 
 -------------------------------------------------------------------------
 
 CLRB o
-  test 7, clear O, jump A+1
-  test 7, clear O, jump A+1
+  test 7, clear o, jump A+1
+  test 7, clear o, jump A+1
 
+  (clear bit)
   Clear output bit o
 
 -------------------------------------------------------------------------
 
 CLRBJMP o, a
-  test 7, clear O, jump a
-  test 7, clear O, jump a
+  test 7, clear o, jump a
+  test 7, clear o, jump a
 
+  (clear bit, jump)
   Clear output bit o and jump to a
 
 -------------------------------------------------------------------------
@@ -189,6 +252,7 @@ CCLRB of, ot
   test 7, clear of, jump A+1
   test 7, clear ot, jump A+1
 
+  (conditional clear bit)
   If F is clear, clear bit Of
   If F is set,   clear bit Ot  
   
@@ -197,7 +261,8 @@ CCLRB of, ot
 OUTIN  o, i
   test i, set o, jump A+1
   test i, clear o, jump A+1
-  
+
+  (output, input)  
   write the value of the F register to output o
   read the value of i to the F register
 
@@ -206,7 +271,8 @@ OUTIN  o, i
 OUTINJMP  o, i, a
   test i, set o, jump a
   test i, clear o, jump a
-  
+
+  (output, input, and jump)  
   write the value of the F register to output o
   read the value of i to the F register
   jump to a
@@ -216,7 +282,8 @@ OUTINJMP  o, i, a
 OUTV  o, v
   test 7, write v to o, jump A+1
   test 7, write v to o, jump A+1
-  
+
+  (output value)  
   write the value v to output o
   
 -------------------------------------------------------------------------
@@ -224,7 +291,8 @@ OUTV  o, v
 OUTVJMP  o, v, a
   test 7, write v to o, jump a
   test 7, write v to o, jump a
-  
+
+  (output value and jump)  
   write the value v to output o, jump to a
   
 
@@ -233,7 +301,7 @@ OUTVJMP  o, v, a
 OUT  o
   test 7, set o, jump A+1
   test 7, clear o, jump A+1
-  
+
   write the value of the F register to output o
   
 -------------------------------------------------------------------------
@@ -241,7 +309,8 @@ OUT  o
 OUTI  o
   test 7, clear o, jump A+1
   test 7, set o, jump A+1
-  
+
+  (output inverse)  
   write the inverse value of the F register to output o
 
     
@@ -250,7 +319,8 @@ OUTI  o
 OUTJMP  o, a
   test 7, set o, jump a
   test 7, clear o, jump a
-  
+
+  (output and jump)  
   write the value of the F register to output o, and jump to address  a
 
 -------------------------------------------------------------------------
@@ -259,6 +329,7 @@ OUTIJMP  o, a
   test 7, clear o, jump a
   test 7, set o, jump a
   
+  (output inverse and jump)
   write the inverse value of the F register to output o, and jump to address  a
 
 -------------------------------------------------------------------------
@@ -266,7 +337,8 @@ OUTIJMP  o, a
 COUTF  of, vf, ot, vt
   test 7, set/clear of, jump A+1
   test 7, set/clear ot, jump A+1
-  
+
+  (conditionally output F)  
   write vf to of if F is set
   write vt to ot if F is clear
 
@@ -284,6 +356,7 @@ INJMP  i, a
   test i, set NC, jump a
   test i, set NC, jump a
     
+  (input and jump)  
   load the value of i into the F register and jump to address
 
 -------------------------------------------------------------------------
@@ -291,7 +364,8 @@ INJMP  i, a
 INJPS  i, a
   test i, set NC, jump a
   test i, set NC, jump A+1
-    
+
+  (input , jump if F set)    
   load the value of i into the F register and jump to address a if it is set
     
 -------------------------------------------------------------------------
@@ -300,6 +374,7 @@ INJPC  i, a
   test i, set NC, jump A+1
   test i, set NC, jump a
     
+  (input , jump if F set)  
   load the value of i into the F register and jump to address a if it is clear
     
 -------------------------------------------------------------------------
@@ -308,9 +383,10 @@ CINF if, it
   test if, set NC, jump A+1
   test it, set NC, jump A+1
     
-  load the value of if into the F register if the F register is clear;
+  (conditional input)  
+  load the value of 'if' into the F register if the F register is clear;
   else 
-  load the value of it into the F register.
+  load the value of 'it' into the F register.
 
 -------------------------------------------------------------------------  
 
@@ -327,6 +403,7 @@ JPS a
   test 7, set NC, jump A+1
   test 7, set NC, jump a
   
+  (jump set)
   Jump to a if F is set
   1 is written to the NC output
   
@@ -336,6 +413,7 @@ JPC a
   test 7, set NC, jump a
   test 7, set NC, jump A+1
   
+  (jump clear)
   Jump to a if F is clear
   1 is written to the NC output
 
@@ -345,8 +423,9 @@ FORKF af, at
   test 7, set NC, jump af
   test 7, set NC, jump at
   
+  (fork F)
   If F is clear, jump to af.
-  If F is set,  jump to as.
+  If F is set,  jump to at.
   1 is written to the NC output
 
 -------------------------------------------------------------------------
@@ -355,9 +434,10 @@ FORKI i, af, at
   test i, set NC, jump af
   test i, set NC, jump at
   
+  (fork with input)
   copy value of i to F
   If F is clear, jump to af.
-  If F is set,  jump to as.
+  If F is set,  jump to at.
   1 is written to the NC output
 
 
@@ -367,6 +447,7 @@ WAITIS i
   test i, set NC, jump A
   test i, set NC, jump A+1
   
+  (wait input set)
   copy value of i to F
   Poll i untill it is set.
   1 is written to the NC output
@@ -377,6 +458,7 @@ WAITIC i
   test i, set NC, jump A+1
   test i, set NC, jump A  
   
+  (wait input clear)
   copy value of i to F
   Poll i untill it is clear.
   1 is written to the NC output
@@ -387,6 +469,7 @@ SKIPIC i
   test i, set NC, jump A+2
   test i, set NC, jump A+1
   
+  (skip input clear)
   copy value of i to F
   Skip the next instruction if i is clear
   1 is written to the NC output
@@ -397,6 +480,7 @@ SKIPIS i
   test i, set NC, jump A+1
   test i, set NC, jump A+2
   
+  (skip input set)
   copy value of i to F
   Skip the next instruction if i is set
   1 is written to the NC output
@@ -407,6 +491,7 @@ SKIPFC
   test 7, set NC, jump A+2
   test 7, set NC, jump A+1
   
+  (skip F clear)
   Skip the next instruction if i is clear
   1 is written to the NC output
 
@@ -416,6 +501,7 @@ SKIPFS
   test 7, set NC, jump A+1
   test 7, set NC, jump A+2
   
+  (skip F set)
   Skip the next instruction if i is set
   1 is written to the NC output
 
@@ -425,6 +511,7 @@ REPTIC i
   test i, set NC, jump A-1
   test i, set NC, jump A+1
   
+  (repeat while input clear)
   copy value of i to F
   Repeat the last instruction if i is clear
   1 is written to the NC output
@@ -435,6 +522,7 @@ REPTIS i
   test i, set NC, jump A+1
   test i, set NC, jump A-1
   
+  (repeat while input set)
   copy value of i to F
   Repeat the last instruction if i is set
   1 is written to the NC output
@@ -445,7 +533,8 @@ REPTFC
   test 7, set NC, jump A-1
   test 7, set NC, jump A+1
   
-  Repeat the last instruction if i is clear
+  (repeat F clear)
+  Repeat the last instruction if F is clear
   1 is written to the NC output
   
 -------------------------------------------------------------------------
@@ -454,17 +543,86 @@ REPTFS
   test 7, set NC, jump A+1
   test 7, set NC, jump A-1
   
-  Repeat the last instruction if i is set
+  (repeat F set)
+  Repeat the last instruction if F is set
   1 is written to the NC output
     
 
 
+==========================================================================
+
+Appendix A
+
+  Why do these always have an ascii table?
+    
+00 000 [NUL]      20 032 [   ]      40 064 [@  ]      60 096 [`  ]
+01 001 [SOH]      21 033 [!  ]      41 065 [A  ]      61 097 [a  ]
+02 002 [STX]      22 034 ["  ]      42 066 [B  ]      62 098 [b  ]
+03 003 [ETX]      23 035 [#  ]      43 067 [C  ]      63 099 [c  ]
+04 004 [EOT]      24 036 [$  ]      44 068 [D  ]      64 100 [d  ]
+05 005 [ENQ]      25 037 [%  ]      45 069 [E  ]      65 101 [e  ]
+06 006 [ACK]      26 038 [&  ]      46 070 [F  ]      66 102 [f  ]
+07 007 [BEL]      27 039 ['  ]      47 071 [G  ]      67 103 [g  ]
+08 008 [BS ]      28 040 [(  ]      48 072 [H  ]      68 104 [h  ]
+09 009 [HT ]      29 041 [)  ]      49 073 [I  ]      69 105 [i  ]
+0A 010 [LF ]      2A 042 [*  ]      4A 074 [J  ]      6A 106 [j  ]
+0B 011 [VT ]      2B 043 [+  ]      4B 075 [K  ]      6B 107 [k  ]
+0C 012 [FF ]      2C 044 [,  ]      4C 076 [L  ]      6C 108 [l  ]
+0D 013 [CR ]      2D 045 [-  ]      4D 077 [M  ]      6D 109 [m  ]
+0E 014 [SO ]      2E 046 [.  ]      4E 078 [N  ]      6E 110 [n  ]
+0F 015 [SI ]      2F 047 [/  ]      4F 079 [O  ]      6F 111 [o  ]
+10 016 [DLE]      30 048 [0  ]      50 080 [P  ]      70 112 [p  ]
+11 017 [DC1]      31 049 [1  ]      51 081 [Q  ]      71 113 [q  ]
+12 018 [DC2]      32 050 [2  ]      52 082 [R  ]      72 114 [r  ]
+13 019 [DC3]      33 051 [3  ]      53 083 [S  ]      73 115 [s  ]
+14 020 [DC4]      34 052 [4  ]      54 084 [T  ]      74 116 [t  ]
+15 021 [NAK]      35 053 [5  ]      55 085 [U  ]      75 117 [u  ]
+16 022 [SYN]      36 054 [6  ]      56 086 [V  ]      76 118 [v  ]
+17 023 [ETB]      37 055 [7  ]      57 087 [W  ]      77 119 [w  ]
+18 024 [CAN]      38 056 [8  ]      58 088 [X  ]      78 120 [x  ]
+19 025 [EM ]      39 057 [9  ]      59 089 [Y  ]      79 121 [y  ]
+1A 026 [SUB]      3A 058 [:  ]      5A 090 [Z  ]      7A 122 [z  ]
+1B 027 [ESC]      3B 059 [;  ]      5B 091 [[  ]      7B 123 [{  ]
+1C 028 [FS ]      3C 060 [<  ]      5C 092 [\  ]      7C 124 [|  ]
+1D 029 [GS ]      3D 061 [=  ]      5D 093 []  ]      7D 125 [}  ]
+1E 030 [RS ]      3E 062 [>  ]      5E 094 [^  ]      7E 126 [~  ]
+1F 031 [US ]      3F 063 [?  ]      5F 095 [_  ]      7F 127 [DLE]
 
 
+Appendix B
+  
+  Why do these always have a hard to understand hex to decimal table?
+  
+    
+  | 0   1   2   3   4   5   6    7    8    9    A    B    C    D    E    F
+--|-----------------------------------------------------------------------------      
+0 | 0   16  32  48  64  80  96   112  128  144  160  176  192  208  224  240
+1 | 1   17  33  49  65  81  97   113  129  145  161  177  193  209  225  241
+2 | 2   18  34  50  66  82  98   114  130  146  162  178  194  210  226  242
+3 | 3   19  35  51  67  83  99   115  131  147  163  179  195  211  227  243
+4 | 4   20  36  52  68  84  100  116  132  148  164  180  196  212  228  244
+5 | 5   21  37  53  69  85  101  117  133  149  165  181  197  213  229  245
+6 | 6   22  38  54  70  86  102  118  134  150  166  182  198  214  230  246
+7 | 7   23  39  55  71  87  103  119  135  151  167  183  199  215  231  247
+8 | 8   24  40  56  72  88  104  120  136  152  168  184  200  216  232  248
+9 | 9   25  41  57  73  89  105  121  137  153  169  185  201  217  233  249
+A | 10  26  42  58  74  90  106  122  138  154  170  186  202  218  234  250
+B | 11  27  43  59  75  91  107  123  139  155  171  187  203  219  235  251
+C | 12  28  44  60  76  92  108  124  140  156  172  188  204  220  236  252
+D | 13  29  45  61  77  93  109  125  141  157  173  189  205  221  237  253
+E | 14  30  46  62  78  94  110  126  142  158  174  190  206  222  238  254
+F | 15  31  47  63  79  95  111  127  143  159  175  191  207  223  239  255
 
 
-
-
+Appendex C
+ 
+ A binary to decimal chart seems to be suitable for a 1 bit computer...
+ 
+ 0  0
+ 1  1
+ 
+ 
+ 
 
 
 

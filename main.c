@@ -69,7 +69,7 @@ Tips:
   - dont put instructions on the same line as labels
 
 */
-
+// this is the address for the 'do nothing' input and outputs:
 #define I_NULL 7
 #define O_NULL 7
 
@@ -80,7 +80,7 @@ char  * MNEMONICS = ";NOP;HALT;SETB;SETBJMP;CSETB;CLRB;CLRBJMP;CCLRB;OUTIN;OUTIN
 int  ParamCount[] = {  0,  0,   1,     2,     2,    1,    2,      2,    2,     3,     2,    3,    1,   1,  2,       2,     4,   1,   2,   2,    2,    2,  1,   1,  1,  2,    3,     1,    1,      1,     1,     0,     0,    1,      1,     0,     0  };
 enum InstIdx { NOP = 0,HALT,SETB,SETBJMP,CSETB,CLRB,CLRBJMP,CCLRB,OUTIN,OUTINJMP,OUTV,OUTVJMP,OUT,OUTI,OUTIJMP,OUTJMP,COUTF,IN,INJMP,INJPS,INJPC,CINF,JMP,JPS,JPC,FORKF,FORKI,WAITIS,WAITIC,SKIPIC,SKIPIS,SKIPFC,SKIPFS,REPTIC,REPTIS,REPTFC,REPTFS };
 
-
+// construction of the 32 bit instruction.
 typedef struct opcode_s {  
       uint8_t FInstruction;
       uint8_t FAddress;
