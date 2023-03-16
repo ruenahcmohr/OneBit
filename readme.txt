@@ -5,12 +5,12 @@
 ----------------------
 
 Features:
-  - Every instruction is single cycle.
+  - Every 32 bit instruction is single cycle.
   - it can do like a lot of MIPS.
   - Tips out at over 4MHz, thats faster than a 6502!
   - 7 one bit inputs
   - 7 one bit outputs
-  - 37 powerfully psychedelic 32 bit instructions
+  - 41 powerfully psychedelic instructions
   - Simple hardware architecture using high-availability components.
   - A flag register.
   - None of those bothersome interrupt things.
@@ -54,14 +54,6 @@ NAME EQU
    
 
 --------------------
-WISHLIST:
-
-
-
-JPV  i, v, a  ; jump if input is value
-JPNV i, v, a  ; jump if input is not value
-
---------------------------------------------
 
            ** By reading this you are liable for your own mental damage 
                   caused by trying to understand  this instruction set. **
@@ -130,7 +122,13 @@ Instruction summary:
 
   JMP      a     
   JPS      a       
-  JPC      a      
+  JPC      a    
+  
+  JPV      v, a
+  JPNV     v, a
+  
+  JPIV     i, v, a
+  JPINV    i, v, a
 
   FORKF    af, at
   FORKI    i, af, at
@@ -415,6 +413,46 @@ JPC a
   
   (jump clear)
   Jump to a if F is clear
+  1 is written to the NC output
+
+-------------------------------------------------------------------------
+
+JPV      v, a
+  test 7, set NC, if(v = 1) jump A+1 else jump a
+  test 7, set NC, if(v = 1) jump a   else jump A+1
+
+  (jump if value)
+  Jump to a if F is the value v
+  1 is written to the NC output
+  
+-------------------------------------------------------------------------  
+  
+JPNV     v, a
+  test 7, set NC, if(v = 1) jump a   else jump A+1
+  test 7, set NC, if(v = 1) jump A+1 else jump a
+
+  (jump if not value)
+  Jump to a if F is not the value v
+  1 is written to the NC output
+
+-------------------------------------------------------------------------  
+  
+JPIV     i, v, a
+  test i, set NC, if(v = 1) jump A+1 else jump a
+  test i, set NC, if(v = 1) jump a   else jump A+1
+
+  (jump if input value)
+  Jump to a if i is the value v
+  1 is written to the NC output
+
+-------------------------------------------------------------------------  
+  
+JPINV    i, v, a
+  test i, set NC, if(v = 1) jump a   else jump A+1
+  test i, set NC, if(v = 1) jump A+1 else jump a
+
+  (jump if input not value)
+  Jump to a if i is not the value v
   1 is written to the NC output
 
 -------------------------------------------------------------------------

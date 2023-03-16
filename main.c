@@ -51,6 +51,12 @@ CINF      if, it
 JMP       a
 JPS       a
 JPC       a
+
+JPIV      i, v, a
+JPINV     i, v, a 
+JPV       v, a
+JPNV      v, a
+
 FORKF     af, at
 FORKI     i,  af, at
 WAITIS    i
@@ -73,12 +79,12 @@ Tips:
 #define I_NULL 7
 #define O_NULL 7
 
-#define INSTCOUNT 38
+#define INSTCOUNT 42
 // due to other filtering, a semicolon will never be part of the string, so we can use that.
 // search for ;NMEOMONIC;
-char  * MNEMONICS = ";NOP;HALT;SETB;SETBJMP;CSETB;CLRB;CLRBJMP;CCLRB;OUTIN;OUTINJMP;OUTV;OUTVJMP;OUT;OUTI;OUTIJMP;OUTJMP;COUTF;IN;INJMP;INJPS;INJPC;CINF;JMP;JPS;JPC;FORKF;FORKI;WAITIS;WAITIC;SKIPIC;SKIPIS;SKIPFC;SKIPFS;REPTIC;REPTIS;REPTFC;REPTFS;";
-int  ParamCount[] = {  0,  0,   1,     2,     2,    1,    2,      2,    2,     3,     2,    3,    1,   1,  2,       2,     4,   1,   2,   2,    2,    2,  1,   1,  1,  2,    3,     1,    1,      1,     1,     0,     0,    1,      1,     0,     0  };
-enum InstIdx { NOP = 0,HALT,SETB,SETBJMP,CSETB,CLRB,CLRBJMP,CCLRB,OUTIN,OUTINJMP,OUTV,OUTVJMP,OUT,OUTI,OUTIJMP,OUTJMP,COUTF,IN,INJMP,INJPS,INJPC,CINF,JMP,JPS,JPC,FORKF,FORKI,WAITIS,WAITIC,SKIPIC,SKIPIS,SKIPFC,SKIPFS,REPTIC,REPTIS,REPTFC,REPTFS };
+char  * MNEMONICS = ";NOP;HALT;SETB;SETBJMP;CSETB;CLRB;CLRBJMP;CCLRB;OUTIN;OUTINJMP;OUTV;OUTVJMP;OUT;OUTI;OUTIJMP;OUTJMP;COUTF;IN;INJMP;INJPS;INJPC;CINF;JMP;JPS;JPC;JPIV;JPINV;JPV;JPNV;FORKF;FORKI;WAITIS;WAITIC;SKIPIC;SKIPIS;SKIPFC;SKIPFS;REPTIC;REPTIS;REPTFC;REPTFS;";
+int  ParamCount[] = {  0,  0,   1,     2,     2,    1,    2,      2,    2,     3,     2,    3,    1,   1,  2,       2,     4,   1,   2,   2,    2,    2,  1,   1,  1, 3,    3,   2,   2,   2,    3,     1,    1,      1,     1,     0,     0,    1,      1,     0,     0  };
+enum InstIdx { NOP = 0,HALT,SETB,SETBJMP,CSETB,CLRB,CLRBJMP,CCLRB,OUTIN,OUTINJMP,OUTV,OUTVJMP,OUT,OUTI,OUTIJMP,OUTJMP,COUTF,IN,INJMP,INJPS,INJPC,CINF,JMP,JPS,JPC,JPIV,JPINV,JPV,JPNV,FORKF,FORKI,WAITIS,WAITIC,SKIPIC,SKIPIS,SKIPFC,SKIPFS,REPTIC,REPTIS,REPTFC,REPTFS };
 
 // construction of the 32 bit instruction.
 typedef struct opcode_s {  
@@ -502,6 +508,46 @@ int buildInstruction(opcode_t *OP, char ** strings, uint8_t address, varlist_t *
 
     case JPC:
       OP->FAddress = v8[1]; 
+    break;
+
+    case JPIV:     // i, v, a
+     if ((t = OpAssemble( v8[1] , O_NULL, 1 )) < 0 ) return -1;
+     OP->FInstruction = t;
+     OP->TInstruction = OP->FInstruction;
+     
+     if (v8[2] == 0) {
+       OP->FAddress = v8[3]; 
+     } else {
+       OP->TAddress = v8[3]; 
+     }
+    break;
+
+    case JPINV:   //  i, v, a 
+     if ((t = OpAssemble( v8[1] , O_NULL, 1 )) < 0 ) return -1;
+     OP->FInstruction = t;
+     OP->TInstruction = OP->FInstruction;
+     
+     if (v8[2] == 0) {
+       OP->TAddress = v8[3]; 
+     } else {
+       OP->FAddress = v8[3]; 
+     }
+    break; 
+
+    case JPV:     //  v, a
+     if (v8[1] == 0) {
+       OP->FAddress = v8[2]; 
+     } else {
+       OP->TAddress = v8[2]; 
+     }
+    break;
+
+    case JPNV:    //  v, a
+     if (v8[1] == 0) {
+       OP->TAddress = v8[2]; 
+     } else {
+       OP->FAddress = v8[2]; 
+     }
     break;
 
     case FORKF:
