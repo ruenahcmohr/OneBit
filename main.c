@@ -160,6 +160,7 @@ int assemble(FILE *input, FILE *out, varlist_t *llabels ) {
   LineNum = 0;
   while (getline(&line, &lineSize, input) != -1) {
     LineNum++;
+   // printf("-> %s", line);
     
     for(p = line; *p; p++) { // this will get more complex...
       if (*p == ';')  { *p = 0;  break; } 
@@ -179,7 +180,9 @@ int assemble(FILE *input, FILE *out, varlist_t *llabels ) {
           printf("WTF Empty label ??\n" );
         }
       } else {
-        if ((++address) == 0) printf( "PROGRAM OVERFLOW\n");
+        if (str2Inst(tokLine) != (-1)) { // if the line has a valid instruction...
+          if ((++address) > 255) printf( "PROGRAM OVERFLOW\n");
+        }
       }
     }
   }
@@ -191,6 +194,9 @@ int assemble(FILE *input, FILE *out, varlist_t *llabels ) {
   LineNum = 0;
   // the second pass builds the program
   while (getline(&line, &lineSize, input) != -1) {
+  
+  //  printf("                                                      %s", line);
+  
     LineNum++;
     for(p = line; *p; p++) { // this will get more complex...
       if (*p == ';')  { *p = 0;  break; } 
@@ -200,7 +206,7 @@ int assemble(FILE *input, FILE *out, varlist_t *llabels ) {
     
     tokLine = strtok(line, " ");
     if (tokLine) {
-        
+     // printf("-> looking up token\n");  
       if (0) {
       } else if (tokLine[strlen(tokLine)-1] == ':') {
       } else {
@@ -219,7 +225,9 @@ int assemble(FILE *input, FILE *out, varlist_t *llabels ) {
           fputc(inst.TInstruction, out);
           fputc(inst.TAddress, out);  
         
-          address++;
+          if ((++address) > 255) printf( "PROGRAM OVERFLOW\n");
+        } else {
+        //  printf("-> instuction assembly failure\n");
         }
       }
       // next line here
@@ -293,7 +301,8 @@ int buildInstruction(opcode_t *OP, char ** strings, uint8_t address, varlist_t *
    argCount++;   
   }    
   
-  if (argCount == 0) return -1;
+  // why did I add this line?
+  // if (argCount == 0) { printf("-->fail, argument count is 0\n"); return -1; }
   
   if ((nmNumber = str2Inst(strings[0])) == -1) {
   // check for equ here

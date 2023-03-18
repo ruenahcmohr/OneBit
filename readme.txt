@@ -360,19 +360,19 @@ INJMP  i, a
 -------------------------------------------------------------------------
 
 INJPS  i, a
-  test i, set NC, jump a
   test i, set NC, jump A+1
+  test i, set NC, jump a
 
-  (input , jump if F set)    
+  (jump if input i is set)    
   load the value of i into the F register and jump to address a if it is set
     
 -------------------------------------------------------------------------
 
 INJPC  i, a
-  test i, set NC, jump A+1
   test i, set NC, jump a
+  test i, set NC, jump A+1
     
-  (input , jump if F set)  
+  (jump if input i is clear)  
   load the value of i into the F register and jump to address a if it is clear
     
 -------------------------------------------------------------------------
