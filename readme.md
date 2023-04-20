@@ -1,8 +1,10 @@
-   1 bit ROM based controller
+#  1 bit ROM based controller
    
 ![assembly reference](buildref.jpg)
    
  Based on https://laughtonelectronics.com/Arcana/One-bit%20computer/One-bit%20computer.html
+
+I'm trying to convert this to markdown, in the meantime the formatting is badly broken, sorry.
 
 ---
 
@@ -23,12 +25,13 @@ Features:
 ---
 
 Compiling the assembler:
-`  To compile the assembler:  gcc *.c -o 1bit-as
+` 
+  To compile the assembler:  gcc *.c -o 1bit-as
   To assemble with it:  1bit-as test1.asm
     output is in output.bin
   To burn with minipro to a 28C64 eeprom: 
     minipro -p AT28C64 -s -w output.bin
-`    
+`     
 
 ---
 
@@ -91,19 +94,21 @@ Instructions:
     - an address is jumped to (which one depending on the F register)
 
   Machine Instruction:
+` 
     if F false: [ I, O ] [ jump ]
     if F true:  [ I, O ] [ jump ] 
+` 
 
   Order of operations:
-    (latch outputs, read inputs), jump
-    The value output depends on the status of the F register from the previous instruction.
-    The value of the F register after the read determines the jump performed.
+-    (latch outputs, read inputs), jump
+-    The value output depends on the status of the F register from the previous instruction.
+-    The value of the F register after the read determines the jump performed.
 
 ---
 
 Instruction summary:
 
-|||
+| | |
 |  a: | 8 bit address          |
 |  i: | 3 bit input address    |
 |  o: | 3 bit output address   |
