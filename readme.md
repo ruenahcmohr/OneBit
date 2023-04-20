@@ -1,22 +1,26 @@
    1 bit ROM based controller
    
+![assembly reference](buildref.jpg)
+   
  Based on https://laughtonelectronics.com/Arcana/One-bit%20computer/One-bit%20computer.html
 
-----------------------
+---
 
 Features:
-  - Every 32 bit instruction is single cycle.
-  - it can do like a lot of MIPS.
-  - Tips out at over 4MHz, thats faster than a 6502!
-  - 7 one bit inputs
-  - 7 one bit outputs
-  - 41 powerfully psychedelic instructions
-  - Simple hardware architecture using high-availability components.
-  - A flag register.
-  - None of those bothersome interrupt things.
-  - Programmable with up to 256 instructions.
+- Every 32 bit instruction is single cycle.
+- it can do like a lot of MIPS.
+- Tips out at over 4MHz, thats faster than a 6502!
+- 7 one bit user inputs
+- 7 one bit user outputs
+- System halted output.
+- 41 powerfully psychedelic instructions
+- Simple hardware architecture using high-availability components.
+- A flag register.
+- None of those bothersome interrupt things.
+- Programmable with up to 256 instructions.
+- Completely stack overflow protected, by not having a stack.
   
------------------------
+---
 
 Compiling the assembler:
   To compile the assembler:  gcc *.c -o 1bit-as
@@ -26,37 +30,55 @@ Compiling the assembler:
     minipro -p AT28C64 -s -w output.bin
     
 
-------------------
+---
+
 Coding:
-  - use uppercase
-  - dont put instructions on lines with labels
-  - There are no actual commas, 
-    SETBJMP 4 JUMPDEST
-  - See examples and test programs.  
-  - The reset vector is 0x00.
+- use uppercase
+- dont put instructions on lines with labels
+- There are no actual commas, 
+  SETBJMP 4 JUMPDEST
+- See examples and test programs.  
+- The reset vector is 0x00.
+
+---
+
+Constructing:
+  There are a few flavours of the hardware.
+  Basic system:
+  
+![basic schematic](schematic.jpg)
+  
+  
+  System with serial upload:
+   (WIP)
+  
+
+
+---
+
   
   twitter @ruenahcmohr
   
   
   
 
-Label:
+ThisIsALabel:
 
-; comment
+; This is a comment
 
 NAME EQU VALUE
-  where value is either a number of the name of something previously defined.
-  example PI EQU 3
+  where value is either a number, or the name of something previously defined. (SINGLE EQU ONE)
+  example: PI EQU 3
   no equations or math or junk, just values.
   
 NAME EQU
    delete value 'name'
    
 
---------------------
+---
 
-           ** By reading this you are liable for your own mental damage 
-                  caused by trying to understand  this instruction set. **
+           ** By reading this you are responsible for any mental damage 
+                  caused by trying to understand this instruction set. **
 
 
 Instructions:
@@ -66,17 +88,18 @@ Instructions:
   Effectivly, for the purposes of programming the following occurs:
     - the output is written
     - an input is read to the F register
-    - an address is jumped to
+    - an address is jumped to (which one depending on the F register)
 
   Machine Instruction:
     if F false: [ I, O ] [ jump ]
     if F true:  [ I, O ] [ jump ] 
 
   Order of operations:
-    (latch input and outputs), jump
+    (latch outputs, read inputs), jump
     The value output depends on the status of the F register from the previous instruction.
+    The value of the F register after the read determines the jump performed.
 
---------------------------------------------
+---
 
 Instruction summary:
 
@@ -150,8 +173,64 @@ Instruction summary:
   
   -- math / ALU instructions
   
+   
   
+            ---==============================---  
+  
+  
+   Flag modified / output modified.
 
+ M = maybe.
+
+              F      Output     Cycles
+REPTFC    |       |         |     1     |    
+REPTFS    |       |         |     1     |
+SKIPFC    |       |         |     1     |    
+SKIPFS    |       |         |     1     |
+FORKF     |       |         |     1     |
+NOP       |       |         |     1     |
+HALT      |       |         |    1/0    |         
+JMP       |       |         |     1     |    
+JPS       |       |         |     1     |    
+JPC       |       |         |     1     |    
+JPV       |       |         |     1     |    
+JPNV      |       |         |     1     |
+                                         
+SETB      |       |    Y    |     1     |    
+SETBJMP   |       |    Y    |     1     |    
+CSETB     |       |    Y    |     1     |    
+CLRB      |       |    Y    |     1     |    
+CLRBJMP   |       |    Y    |     1     |    
+CCLRB     |       |    Y    |     1     |                        
+OUTV      |       |    Y    |     1     |    
+OUTVJMP   |       |    Y    |     1     |    
+OUT       |       |    Y    |     1     |    
+OUTI      |       |    Y    |     1     |    
+OUTIJMP   |       |    Y    |     1     |    
+OUTJMP    |       |    Y    |     1     |    
+COUTF     |       |    Y    |     1     |                     
+                                         
+IN        |   Y   |         |     1     |    
+INJMP     |   Y   |         |     1     |    
+INJPS     |   Y   |         |     1     |    
+INJPC     |   Y   |         |     1     |    
+CINF      |   Y   |         |     1     |                         
+JPIV      |   Y   |         |     1     |    
+JPINV     |   Y   |         |     1     |                       
+FORKI     |   Y   |         |     1     |    
+WAITIS    |   Y   |         |     1     |    
+WAITIC    |   Y   |         |     1     |    
+SKIPIC    |   Y   |         |     1     |    
+SKIPIS    |   Y   |         |     1     |                      
+REPTIC    |   Y   |         |     1     |    
+REPTIS    |   Y   |         |     1     |                        
+                                         
+OUTIN     |   Y   |    Y    |     1     |    
+OUTINJMP  |   Y   |    Y    |     1     |
+                                       
+                                      
+  
+ 
 
 ===================================================================
 
@@ -179,7 +258,7 @@ Instruction_name
  o: 3 bit output
  v: 1 bit value
 
--------------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 NOP    
   test 7, set NC, jump A+1
@@ -196,7 +275,7 @@ HALT
 
   Halt machine.
   Reset is the only escape
-  0 is written to the NC output (machine halted)    
+  0 is written to the NC output (machine halts by looping this instruction)    
     
 -------------------------------------------------------------------------
 
