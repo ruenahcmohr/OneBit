@@ -23,12 +23,12 @@ Features:
 ---
 
 Compiling the assembler:
-  To compile the assembler:  gcc *.c -o 1bit-as
+`  To compile the assembler:  gcc *.c -o 1bit-as
   To assemble with it:  1bit-as test1.asm
     output is in output.bin
   To burn with minipro to a 28C64 eeprom: 
     minipro -p AT28C64 -s -w output.bin
-    
+`    
 
 ---
 
@@ -103,11 +103,11 @@ Instructions:
 
 Instruction summary:
 
-
-  a: 8 bit address
-  i: 3 bit input address
-  o: 3 bit output address
-  v: 1 bit value
+|||
+|  a: | 8 bit address          |
+|  i: | 3 bit input address    |
+|  o: | 3 bit output address   |
+|  v: | 1 bit value            |
 
 
   -- machine set
@@ -182,51 +182,51 @@ Instruction summary:
 
  M = maybe.
 
-              F      Output     Cycles
-REPTFC    |       |         |     1     |    
-REPTFS    |       |         |     1     |
-SKIPFC    |       |         |     1     |    
-SKIPFS    |       |         |     1     |
-FORKF     |       |         |     1     |
-NOP       |       |         |     1     |
-HALT      |       |         |    1/0    |         
-JMP       |       |         |     1     |    
-JPS       |       |         |     1     |    
-JPC       |       |         |     1     |    
-JPV       |       |         |     1     |    
-JPNV      |       |         |     1     |
-                                         
-SETB      |       |    Y    |     1     |    
-SETBJMP   |       |    Y    |     1     |    
-CSETB     |       |    Y    |     1     |    
-CLRB      |       |    Y    |     1     |    
-CLRBJMP   |       |    Y    |     1     |    
-CCLRB     |       |    Y    |     1     |                        
-OUTV      |       |    Y    |     1     |    
-OUTVJMP   |       |    Y    |     1     |    
-OUT       |       |    Y    |     1     |    
-OUTI      |       |    Y    |     1     |    
-OUTIJMP   |       |    Y    |     1     |    
-OUTJMP    |       |    Y    |     1     |    
-COUTF     |       |    Y    |     1     |                     
-                                         
-IN        |   Y   |         |     1     |    
-INJMP     |   Y   |         |     1     |    
-INJPS     |   Y   |         |     1     |    
-INJPC     |   Y   |         |     1     |    
-CINF      |   Y   |         |     1     |                         
-JPIV      |   Y   |         |     1     |    
-JPINV     |   Y   |         |     1     |                       
-FORKI     |   Y   |         |     1     |    
-WAITIS    |   Y   |         |     1     |    
-WAITIC    |   Y   |         |     1     |    
-SKIPIC    |   Y   |         |     1     |    
-SKIPIS    |   Y   |         |     1     |                      
-REPTIC    |   Y   |         |     1     |    
-REPTIS    |   Y   |         |     1     |                        
-                                         
-OUTIN     |   Y   |    Y    |     1     |    
-OUTINJMP  |   Y   |    Y    |     1     |
+|           |   F   |  Output |    Cycles |
+| REPTFC    |       |         |     1     |    
+| REPTFS    |       |         |     1     |
+| SKIPFC    |       |         |     1     |    
+| SKIPFS    |       |         |     1     |
+| FORKF     |       |         |     1     |
+| NOP       |       |         |     1     |
+| HALT      |       |         |    1/0    |         
+| JMP       |       |         |     1     |    
+| JPS       |       |         |     1     |    
+| JPC       |       |         |     1     |    
+| JPV       |       |         |     1     |    
+| JPNV      |       |         |     1     |
+|                                          
+| SETB      |       |    Y    |     1     |    
+| SETBJMP   |       |    Y    |     1     |    
+| CSETB     |       |    Y    |     1     |    
+| CLRB      |       |    Y    |     1     |    
+| CLRBJMP   |       |    Y    |     1     |    
+| CCLRB     |       |    Y    |     1     |                        
+| OUTV      |       |    Y    |     1     |    
+| OUTVJMP   |       |    Y    |     1     |    
+| OUT       |       |    Y    |     1     |    
+| OUTI      |       |    Y    |     1     |    
+| OUTIJMP   |       |    Y    |     1     |    
+| OUTJMP    |       |    Y    |     1     |    
+| COUTF     |       |    Y    |     1     |                     
+|                                          
+| IN        |   Y   |         |     1     |    
+| INJMP     |   Y   |         |     1     |    
+| INJPS     |   Y   |         |     1     |    
+| INJPC     |   Y   |         |     1     |    
+| CINF      |   Y   |         |     1     |                         
+| JPIV      |   Y   |         |     1     |    
+| JPINV     |   Y   |         |     1     |                       
+| FORKI     |   Y   |         |     1     |    
+| WAITIS    |   Y   |         |     1     |    
+| WAITIC    |   Y   |         |     1     |    
+| SKIPIC    |   Y   |         |     1     |    
+| SKIPIS    |   Y   |         |     1     |                      
+| REPTIC    |   Y   |         |     1     |    
+| REPTIS    |   Y   |         |     1     |                        
+|                                          
+| OUTIN     |   Y   |    Y    |     1     |    
+| OUTINJMP  |   Y   |    Y    |     1     |
                                        
                                       
   
@@ -253,11 +253,12 @@ Instruction_name
  Input 7 is the loopback input. Reading this will not modify the F register.
 
  arguments:
+ `
  a: 8 bit address
  i: 3 bit input
  o: 3 bit output
  v: 1 bit value
-
+`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 NOP    
