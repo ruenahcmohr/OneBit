@@ -103,8 +103,7 @@ Instructions:
 
 Machine Instruction:
 
-   if F false: [ I, O ] [ jump ]
-   
+   if F false: [ I, O ] [ jump ] <br>   
    if F true:  [ I, O ] [ jump ] 
 
 
