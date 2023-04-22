@@ -55,13 +55,19 @@ Constructing:
   System with serial upload:
    (WIP)
   
-
-
 ---
+ 
+Using:
+So what can a 1 bit computer be used for?
+It can be used as a simple PLC,
+Serial is 1 bit, so it can do that,
 
-  
+ 
+---
+  Questions?
+    
   twitter @ruenahcmohr
-  
+---  
   
   
 
@@ -109,6 +115,7 @@ Instructions:
 Instruction summary:
 
 | | |
+|--|--|
 |  a: | 8 bit address          |
 |  i: | 3 bit input address    |
 |  o: | 3 bit output address   |
