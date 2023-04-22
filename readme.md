@@ -101,11 +101,11 @@ Instructions:
     - an input is read to the F register
     - an address is jumped to (which one depending on the F register)
 
-  Machine Instruction:
-` 
-    if F false: [ I, O ] [ jump ]
-    if F true:  [ I, O ] [ jump ] 
-` 
+Machine Instruction:
+
+   if F false: [ I, O ] [ jump ]
+   if F true:  [ I, O ] [ jump ] 
+
 
   Order of operations:
 -    (latch outputs, read inputs), jump
