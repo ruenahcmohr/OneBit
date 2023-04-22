@@ -8,7 +8,7 @@ I'm trying to convert this to markdown, in the meantime the formatting is badly 
 
 ---
 
-Features:
+## Features
 - Every 32 bit instruction is single cycle.
 - it can do like a lot of MIPS.
 - Tips out at over 4MHz, thats faster than a 6502!
@@ -24,7 +24,7 @@ Features:
   
 ---
 
-Compiling the assembler:
+## Compiling the assembler
 ` 
   To compile the assembler:  gcc *.c -o 1bit-as
   To assemble with it:  1bit-as test1.asm
@@ -35,7 +35,7 @@ Compiling the assembler:
 
 ---
 
-Coding:
+## Coding
 - use uppercase
 - dont put instructions on lines with labels
 - There are no actual commas, 
@@ -45,7 +45,7 @@ Coding:
 
 ---
 
-Constructing:
+## Constructing
   There are a few flavours of the hardware.
   Basic system:
   
@@ -57,7 +57,7 @@ Constructing:
   
 ---
  
-Using:
+## Using
 So what can a 1 bit computer be used for?
 It can be used as a simple PLC,
 Serial is 1 bit, so it can do that,
@@ -97,9 +97,9 @@ Instructions
   This machine only actually has one micro instruction. 
   
   Effectivly, for the purposes of programming the following occurs:
--   the output is written
--   an input is read to the F register
--   an address is jumped to (which one depending on the F register)
+-   The output is written
+-   An input is read to the F register
+-   An address is jumped to (which one depending on the F register)
 
    Machine Instruction
       if F false: [ I, O ] [ jump ] <br>   
