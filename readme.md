@@ -207,7 +207,7 @@ Instruction summary:
 | JPC       |       |         |     1     |    
 | JPV       |       |         |     1     |    
 | JPNV      |       |         |     1     |
-|                                          
+|           |       |         |           |
 | SETB      |       |    Y    |     1     |    
 | SETBJMP   |       |    Y    |     1     |    
 | CSETB     |       |    Y    |     1     |    
@@ -221,7 +221,7 @@ Instruction summary:
 | OUTIJMP   |       |    Y    |     1     |    
 | OUTJMP    |       |    Y    |     1     |    
 | COUTF     |       |    Y    |     1     |                     
-|                                          
+|           |       |         |           |
 | IN        |   Y   |         |     1     |    
 | INJMP     |   Y   |         |     1     |    
 | INJPS     |   Y   |         |     1     |    
@@ -236,7 +236,7 @@ Instruction summary:
 | SKIPIS    |   Y   |         |     1     |                      
 | REPTIC    |   Y   |         |     1     |    
 | REPTIS    |   Y   |         |     1     |                        
-|                                          
+|           |       |         |           |
 | OUTIN     |   Y   |    Y    |     1     |    
 | OUTINJMP  |   Y   |    Y    |     1     |
                                        
