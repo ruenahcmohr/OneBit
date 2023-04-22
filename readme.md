@@ -92,19 +92,18 @@ NAME EQU
                   caused by trying to understand this instruction set. **
 
 
-Instructions:
+Instructions
 
   This machine only actually has one micro instruction. 
   
   Effectivly, for the purposes of programming the following occurs:
-    - the output is written
-    - an input is read to the F register
-    - an address is jumped to (which one depending on the F register)
+-   the output is written
+-   an input is read to the F register
+-   an address is jumped to (which one depending on the F register)
 
-Machine Instruction:
-
-   if F false: [ I, O ] [ jump ] <br>   
-   if F true:  [ I, O ] [ jump ] 
+   Machine Instruction
+      if F false: [ I, O ] [ jump ] <br>   
+      if F true:  [ I, O ] [ jump ] 
 
 
   Order of operations:
