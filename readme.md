@@ -194,6 +194,7 @@ Instruction summary:
  M = maybe.
 
 |           |   F   |  Output |    Cycles |
+| -         | -     | -       | -         |
 | REPTFC    |       |         |     1     |    
 | REPTFS    |       |         |     1     |
 | SKIPFC    |       |         |     1     |    
