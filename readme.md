@@ -92,7 +92,7 @@ NAME EQU
                   caused by trying to understand this instruction set. **
 
 
-Instructions
+## Instructions
 
   This machine only actually has one micro instruction. 
   
@@ -113,7 +113,7 @@ Instructions
 
 ---
 
-Instruction summary:
+## Instruction summary
 | | |
 | - | - |
 | a | 8 bit address          |
@@ -247,7 +247,7 @@ Instruction summary:
 
 ===================================================================
 
-Instruction set details:
+## Instruction set details
 
  The format of these instruction details is as follows:
   
@@ -682,7 +682,7 @@ REPTFS
 
 ==========================================================================
 
-Appendix A
+### Appendix A
 
   Why do these always have an ascii table?
     
@@ -720,7 +720,7 @@ Appendix A
 1F 031 [US ]      3F 063 [?  ]      5F 095 [_  ]      7F 127 [DLE]
 
 
-Appendix B
+### Appendix B
   
   Why do these always have a hard to understand hex to decimal table?
   
@@ -745,7 +745,7 @@ E | 14  30  46  62  78  94  110  126  142  158  174  190  206  222  238  254
 F | 15  31  47  63  79  95  111  127  143  159  175  191  207  223  239  255
 
 
-Appendex C
+### Appendex C
  
  A binary to decimal chart seems to be suitable for a 1 bit computer...
  
