@@ -114,12 +114,10 @@ Instructions:
 
 Instruction summary:
 
-| | |
-|--|--|
-|  a: | 8 bit address          |
-|  i: | 3 bit input address    |
-|  o: | 3 bit output address   |
-|  v: | 1 bit value            |
+|a: | 8 bit address          |
+|i: | 3 bit input address    |
+|o: | 3 bit output address   |
+|v: | 1 bit value            |
 
 
   -- machine set
