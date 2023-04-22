@@ -1,0 +1,65 @@
+;
+;
+; larson scanner
+;
+; outputs should sequence, 7 will be funkey becasue its NC
+;
+
+ NOP
+START:
+ CLRB 0
+ NOP
+ SETB 0
+ NOP
+ CLRB 1
+ NOP
+ SETB 1
+ NOP
+ CLRB 2
+ NOP
+ SETB 2
+ NOP
+ CLRB 3
+ NOP
+ SETB 3
+ NOP
+ CLRB 4
+ NOP
+ SETB 4
+ NOP
+ CLRB 5
+ NOP
+ SETB 5
+ NOP
+ CLRB 6
+ NOP
+ SETB 6
+ NOP
+ CLRB 7
+ NOP
+ SETB 7
+ NOP
+ CLRB 6
+ NOP
+ SETB 6
+ NOP
+ CLRB 5
+ NOP
+ SETB 5
+ NOP
+ CLRB 4
+ NOP
+ SETB 4
+ NOP
+ CLRB 3
+ NOP
+ SETB 3
+ NOP
+ CLRB 2
+ NOP
+ SETB 2
+ NOP
+ CLRB 1
+ NOP
+ SETB 1
+ JMP START
