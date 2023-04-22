@@ -1,0 +1,6 @@
+This is an early version of the uploader software
+ features to look forward to are:
+ - write output to file instead of serial port direct
+ - 
+
+./uploader -p /dev/ttyUSB0 -f myProgram.bin
