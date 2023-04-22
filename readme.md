@@ -76,11 +76,13 @@ ThisIsALabel:
 ; This is a comment
 
 NAME EQU VALUE
+
   where value is either a number, or the name of something previously defined. (SINGLE EQU ONE)
   example: PI EQU 3
   no equations or math or junk, just values.
   
 NAME EQU
+
    delete value 'name'
    
 
