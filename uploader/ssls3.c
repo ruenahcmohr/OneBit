@@ -378,9 +378,7 @@ void *SerNotifierThread(SSLS_t *this) {
   unsigned char data;
 
   while(1) {
-    read(this->fd, &data, 1);  
-  //  printf("-%X", data);  
-    this->charHandler(&data, this->callBackPtr);
+    if (read(this->fd, &data, 1) > 0)   this->charHandler(&data, this->callBackPtr);
   }
 
 }

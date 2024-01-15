@@ -1,5 +1,5 @@
 /*
-             CREATOR: Rue Mohr
+             CREATOR: DAn williams
             FILENAME: cmnCmdOptions.c
              STARTED: Nov 27
            PLATFORMS: Linux

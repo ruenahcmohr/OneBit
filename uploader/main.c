@@ -6,11 +6,28 @@
 
 #define strCount(str) (sizeof(str)/sizeof(str[0]))
 
+  #define SetBit(BIT, PORT)    (PORT |= (1<<BIT))
+  #define ClearBit(BIT, PORT)  (PORT &= ~(1<<BIT))
+  
+// this can be used for bit remapping.
+  #define GetBit(BIT,WORD,AS) (((WORD) & (1<<(BIT)))?(AS):0)
+  #define nGetBit(BIT,WORD,AS) (((WORD) & (1<<(BIT)))?0:(AS))
+
+#define RESET_B 15
+#define IOEN_B  14
+#define A0_B    13
+#define A1_B    12
+// nothing on   11
+// nothing on   10
+#define WR_B    9
+#define MEMOE_B 8
+
 void convertByte(uint8_t v, uint8_t latch) ;
 void push(uint8_t v) ;
 void setupParams(CLOSet_t ** this) ;
 void SendBuff(void) ;
 void send16(uint16_t v) ;
+void send8(uint8_t v) ;
 void writePulse() ;
 
 FILE *Input;
@@ -22,26 +39,31 @@ uint8_t TxBuff[257];
 uint8_t BuffPtr;
 
 
+
+
+
 #define InitV()        V=   0xE300
-#define ResetHigh()    V|=  0x8000
-#define ResetLow()     V&=(~0x8000)
-#define IOEnable()     V|=  0x4000
-#define IODisable()    V&=(~0x4000)
 
-// A0 is inverted before it gets to the ROM
-// which makes the high address latch trigger on falling edge.
-#define A0Low()        V|=  0x2000
-#define A0High()       V&=(~0x2000)
+#define ResetHigh()    SetBit(RESET_B, V)
+#define ResetLow()     ClearBit(RESET_B, V)
 
-#define A1High()       V|=  0x1000
-#define A1Low()        V&=(~0x1000)
+#define IOEnable()     ClearBit(IOEN_B, V)
+#define IODisable()    SetBit(IOEN_B, V)
 
-#define MEMWRHigh()    V|=  0x0200
-#define MEMWRLow()     V&=(~0x0200)
-#define MEMOEHigh()    V|=  0x0100
-#define MEMOELow()     V&=(~0x0100)
+#define A0High()       ClearBit(A0_B, V)
+#define A0Low()        SetBit(A0_B, V)
 
-#define SetAddr(A)     V=((V&(0xCF00))|((0x0001&A)<<13)|((0x0002&A)<<11)|((A>>2)&0xFF))^0x2000
+#define A1High()       SetBit(A1_B, V)
+#define A1Low()        ClearBit(A1_B, V)
+
+#define MEMWRHigh()    SetBit(WR_B, V)
+#define MEMWRLow()     ClearBit(WR_B, V)
+
+#define MEMOEHigh()    SetBit(MEMOE_B, V)
+#define MEMOELow()     ClearBit(MEMOE_B, V)
+
+#define SetAddr(A)     V = ( (V & 0xCF00) | GetBit(1,A,(1<<A1_B)) | nGetBit(0,A,(1<<A0_B)) | ((A>>2) & 0xFF) ) 
+
 #define SetDBus(D)     V=(V&(0xFF00))|(D&0xFF)
 
 int main( int argc, char ** argv) {
@@ -55,14 +77,26 @@ int main( int argc, char ** argv) {
 
   SerInit (&Port);
 
+  V = 0xFFFF;
+
   setupParams(&myCommands); // define the arguments
   parseOptions(myCommands, argc-1, &argv[1]);   // then parse the command line
   
-
+  if (Port.filename == NULL) {
+      printf(" I need a port name \n");
+      return -1;
+  }
+    
   if (SerOpen (&Port, Port.filename, 9600) != OK) {  //open text file 'param 1' w/ err chk 
       printf(" }:[ Unable to open %s. WHY!?\n", Port.filename);
       return -1;
   }   
+    
+  if (V != 0xFFFF) {
+    send8(V);
+    printf("Sent encoded 0x%02X\n", V);
+    return 0;
+  }  
     
   if ((Input = fopen(InputFileName, "rb")) == NULL) {  //open text file 'param 1' w/ err chk 
      printf("Unable to open %s for input.\n", InputFileName);
@@ -77,21 +111,17 @@ int main( int argc, char ** argv) {
   printf("UPLOAD\n"); fflush(stdout);
   
   A = 0;
-  while( (i = fgetc(Input)) != EOF ) {       
-    b = i;
-    printf ("\r 0x%02X  ",A); fflush(stdout);
-   
-    SetDBus(b);
-    writePulse(); // 2 writes.
-     
-    A++;
-    
-    if (A & 1) {                       // if A0 just went high                
+  while( (i = fgetc(Input)) != EOF ) {     
+  
+      b = i;
+      printf ("\r 0x%02X  ",A); fflush(stdout);
+
+      SetDBus(b);
+      writePulse(); // 2 writes.
+
+      A++;
+        
       SetAddr(A); send16(V);           // send address      
-    } else {                           // else if A0 is going low we have to latch the upper addreses
-      SetAddr(A); A0High(); send16(V); 
-      SetAddr(A); A0Low();  send16(V);       
-    }        
            
   }
   printf("\nRESET-RELEASE\n");
@@ -105,6 +135,13 @@ int main( int argc, char ** argv) {
   fclose(Input);
   
   return 0; 
+}
+
+
+void send8(uint8_t v) {
+
+    convertByte(v, 1);        
+    SendBuff();
 }
 
 
