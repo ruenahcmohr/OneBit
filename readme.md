@@ -23,7 +23,7 @@ I'm trying to convert this to markdown, in the meantime the formatting is badly 
 - Programmable with up to 256 instructions.
 - Completely stack overflow protected, by not having a stack.
 
-![diagram](sysDiag.png)
+![diagram](SysDiag.png)
   
 ---
 
