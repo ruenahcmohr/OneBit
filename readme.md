@@ -48,6 +48,14 @@ I'm trying to convert this to markdown, in the meantime the formatting is badly 
 
 ---
 
+## Programming
+  On the basic hardware, you will need to use a pre-programmed memory chip.
+  If you are using the version with the serial upload option, the uploader software can 
+  write your binary to a SRAM or 28Cxx Series of eeprom in the system. (no special firmware is required on the 1-bit)
+   (1bit-dude -p /dev/ttyUSB28 -f wooble.bin)
+
+---
+
 ## Constructing
   There are a few flavours of the hardware.
   Basic system:
@@ -56,7 +64,7 @@ I'm trying to convert this to markdown, in the meantime the formatting is badly 
   
   
   System with serial upload:
-   (WIP)
+![basic schematic](schematicWithSerialProgramming.jpg)
   
 ---
  
