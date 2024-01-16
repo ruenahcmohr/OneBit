@@ -1,2 +1,2 @@
-gcc *.c -lpthread
+gcc *.c -lpthread -o 1bit-dude
 
