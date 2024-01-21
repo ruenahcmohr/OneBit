@@ -36,6 +36,12 @@ I'm trying to convert this to markdown, in the meantime the formatting is badly 
     (minipro -p AT28C64 -s -w output.bin)
 ```     
 
+## Compiling the uploader
+```
+  To compile the uploader: gcc *.c -o 1bit-dude
+  To upload with it:  1bit-dude -p /dev/ttyUSB0 -f output.bin
+```
+
 ---
 
 ## Coding
@@ -58,8 +64,9 @@ I'm trying to convert this to markdown, in the meantime the formatting is badly 
 
 ## Constructing
   There are a few flavours of the hardware.
-  Basic system:
   
+  
+  Basic system:
 ![basic schematic](schematic.jpg)
   
   
@@ -144,56 +151,67 @@ Where:
 ```
   -- mostly I/O set
 ```
-  SETB     o       
-  SETBJMP  o, a  
-  CSETB    o, o  
+  SETB      o       
+  SETBJMP   o, a  
+  SETBSKIP  o
+  CSETB     o, o  
+  CSBFS     o
+  CSBFC     o
 
-  CLRB     o       
-  CLRBJMP  o, a      
-  CCLRB    o, o
+  CLRB      o       
+  CLRBJMP   o, a      
+  CLRBSKIP  o
+  CCLRB     o, o
+  CCBFS     o
+  CCBFC     o  
 
-  OUTIN    o, i
-  OUTINJMP o, i, a 
-  OUTV     o, v
-  OUTVJMP  o, v, a
-  OUT      o
-  OUTI     o
-  OUTIJMP  o, a
-  OUTJMP   o, a
-  COUTF    o, v, o, v
+  OUTIN     o, i
+  OUTINJMP  o, i, a 
+  OUTV      o, v
+  OUTVJMP   o, v, a
+  OUT       o
+  OUTI      o
+  OUTIJMP   o, a
+  OUTJMP    o, a
+  COUTF     o, v, o, v
+  COUTFS    o, v
+  COUTFC    o, v
 
-  IN       i
-  INJMP    i, a
-  INJPS    i, a
-  INJPC    i, a
-  CINF     i, i
+  IN        i
+  INJMP     i, a
+  INJPS     i, a
+  INJPC     i, a
+  CINF      i, i
 ```
   -- mostly flow control set
 ```
-  JMP      a     
-  JPS      a       
-  JPC      a    
+  JMP       a     
+  JPS       a       
+  JPC       a   
+  JMPT      a 
   
-  JPV      v, a
-  JPNV     v, a
+  JPV       v, a
+  JPNV      v, a
   
-  JPIV     i, v, a
-  JPINV    i, v, a
+  JPIV      i, v, a
+  JPINV     i, v, a
 
-  FORKF    af, at
-  FORKI    i, af, at
+  FORKF     af, at
+  FORKI     i, af, at
 
-  WAITIS   i  
-  WAITIC   i  
+  WAITIS    i
+  WAITISJMP i, a  
+  WAITIC    i  
+  WAITICJMP i, a
 
-  SKIPIC   i
-  SKIPIS   i
+  SKIPIC    i
+  SKIPIS    i
 
   SKIPFC   
   SKIPFS  
 
-  REPTIC   i
-  REPTIS   i
+  REPTIC    i
+  REPTIS    i
 
   REPTFC   
   REPTFS   
@@ -216,20 +234,29 @@ Where:
 | SKIPFS    |       |         |     1     |
 | FORKF     |       |         |     1     |
 | NOP       |       |         |     1     |
-| HALT      |       |         |    1/0    |         
+| HALT      |       |         |    inf    |         
 | JMP       |       |         |     1     |    
+| JMPT      |       |         |     1     |    
 | JPS       |       |         |     1     |    
 | JPC       |       |         |     1     |    
 | JPV       |       |         |     1     |    
 | JPNV      |       |         |     1     |
 |           |       |         |           |
 | SETB      |       |    Y    |     1     |    
-| SETBJMP   |       |    Y    |     1     |    
+| SETBJMP   |       |    Y    |     1     | 
+| SETBSKIP  |       |    Y    |     1     |    
 | CSETB     |       |    Y    |     1     |    
+| CSBFS     |       |    M    |     1     |    
+| CSBFC     |       |    M    |     1     |    
 | CLRB      |       |    Y    |     1     |    
 | CLRBJMP   |       |    Y    |     1     |    
+| CLRBSKIP  |       |    Y    |     1     |    
 | CCLRB     |       |    Y    |     1     |                        
+| CCBFS     |       |    M    |     1     |    
+| CCBFC     |       |    M    |     1     |    
 | OUTV      |       |    Y    |     1     |    
+| COUTVFS   |       |    M    |     1     |    
+| COUTVFc   |       |    M    |     1     | 
 | OUTVJMP   |       |    Y    |     1     |    
 | OUT       |       |    Y    |     1     |    
 | OUTI      |       |    Y    |     1     |    
@@ -245,8 +272,10 @@ Where:
 | JPIV      |   Y   |         |     1     |    
 | JPINV     |   Y   |         |     1     |                       
 | FORKI     |   Y   |         |     1     |    
-| WAITIS    |   Y   |         |     1     |    
-| WAITIC    |   Y   |         |     1     |    
+| WAITIS    |   Y   |         |     -     |    
+| WAITISJMP |   Y   |         |     -     |    
+| WAITIC    |   Y   |         |     -     |    
+| WAITICJMP |   Y   |         |     -     |    
 | SKIPIC    |   Y   |         |     1     |    
 | SKIPIS    |   Y   |         |     1     |                      
 | REPTIC    |   Y   |         |     1     |    
@@ -256,7 +285,7 @@ Where:
 | OUTINJMP  |   Y   |    Y    |     1     |
                                        
                                       
-  
+  M = maybe (conditional)
  
 
 ===================================================================
@@ -317,6 +346,33 @@ SETB o
 ```
 -------------------------------------------------------------------------
 ```
+SETBSKIP o
+  test 7, set o, jump A+2
+  test 7, set o, jump A+2
+
+  (set bit, skip)
+  Set output bit o, skip next instruction
+```
+-------------------------------------------------------------------------
+```
+CSBFS o
+  test 7, set NC , jump A+1
+  test 7, set o, jump A+1
+
+  (conditional set bit if F set)
+  Set output bit o if F is set (else NOP)
+```
+-------------------------------------------------------------------------
+```
+CSBFC o
+  test 7, set o , jump A+1
+  test 7, set NC,   jump A+1
+
+  (conditional set bit if F clear)
+  Set output bit o if F is clear (else NOP)
+```
+-------------------------------------------------------------------------
+```
 SETBJMP o, a
   test 7, set o, jump a
   test 7, set o, jump a
@@ -342,6 +398,33 @@ CLRB o
 
   (clear bit)
   Clear output bit o
+```
+-------------------------------------------------------------------------
+```
+CLRBSKIP o
+  test 7, clear o, jump A+2
+  test 7, clear o, jump A+2
+
+  (clear bit, skip)
+  Clear output bit o, skip next instruction
+```
+-------------------------------------------------------------------------
+```
+CCBFS o
+  test 7, set NC , jump A+1
+  test 7, clear o, jump A+1
+
+  (conditional clear bit if F set)
+  Clear output bit o if F is set (else NOP)
+```
+-------------------------------------------------------------------------
+```
+CCBFC o
+  test 7, clear o , jump A+1
+  test 7, set NC,   jump A+1
+
+  (conditional clear bit if F clear)
+  Clear output bit o if F is clear (else NOP)
 ```
 -------------------------------------------------------------------------
 ```
@@ -391,6 +474,24 @@ OUTV  o, v
 
   (output value)  
   write the value v to output o
+``` 
+-------------------------------------------------------------------------
+```
+COUTVFS  o, v
+  test 7, set NC, jump A+1
+  test 7, write v to o, jump A+1
+
+  (conditional output value if F is set)  
+  write the value v to output o if F is set (else NOP)
+``` 
+-------------------------------------------------------------------------
+```
+COUTVFC  o, v
+  test 7, write v to o, jump A+1
+  test 7, set NC, jump A+1
+
+  (conditional output value if F is clear)  
+  write the value v to output o if F is clear (else NOP)
 ``` 
 -------------------------------------------------------------------------
 ```
@@ -502,7 +603,16 @@ JMP a
   
   Jump to a
   1 is written to the NC output
-```      
+```     
+-------------------------------------------------------------------------  
+```
+JMPT a
+  test 7, set NC, jump a
+  test 7, set NC, jump a+1
+  
+  Jump to a+F. Table Jump. If F is 1, the jump will be to the specificed address + 1
+  1 is written to the NC output
+```     
 -------------------------------------------------------------------------
 ```
 JPS a
@@ -599,6 +709,17 @@ WAITIS i
   Poll i untill it is set.
   1 is written to the NC output
 ```
+-------------------------------------------------------------------------
+```
+WAITISJMP i, a
+  test i, set NC, jump A
+  test i, set NC, jump a
+  
+  (wait input set, jump)
+  copy value of i to F
+  Poll i untill it is set.
+  1 is written to the NC output
+```
 -------------------------------------------------------------------------  
 ```  
 WAITIC i
@@ -606,6 +727,17 @@ WAITIC i
   test i, set NC, jump A  
   
   (wait input clear)
+  copy value of i to F
+  Poll i untill it is clear.
+  1 is written to the NC output
+```
+-------------------------------------------------------------------------  
+```  
+WAITICJMP i, a
+  test i, set NC, jump a
+  test i, set NC, jump A  
+  
+  (wait input clear, jump)
   copy value of i to F
   Poll i untill it is clear.
   1 is written to the NC output
