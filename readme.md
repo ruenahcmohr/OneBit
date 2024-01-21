@@ -16,7 +16,7 @@ I'm trying to convert this to markdown, in the meantime the formatting is badly 
 - 7 one bit user inputs
 - 7 one bit user outputs
 - System halted output.
-- 41 powerfully psychedelic instructions
+- 52 powerfully psychedelic instructions
 - Simple hardware architecture using high-availability components.
 - A flag register.
 - None of those bothersome interrupt things.
@@ -546,8 +546,8 @@ COUTF  of, vf, ot, vt
   test 7, set/clear ot, jump A+1
 
   (conditionally output F)  
-  write vf to of if F is set
-  write vt to ot if F is clear
+  write vf to of if F is clear
+  write vt to ot if F is set
 ```
 -------------------------------------------------------------------------
 ```
@@ -610,7 +610,8 @@ JMPT a
   test 7, set NC, jump a
   test 7, set NC, jump a+1
   
-  Jump to a+F. Table Jump. If F is 1, the jump will be to the specificed address + 1
+  (Table Jump)
+  Jump to a+F. If F is 1, the jump will be to the specificed address + 1
   1 is written to the NC output
 ```     
 -------------------------------------------------------------------------
