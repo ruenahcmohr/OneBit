@@ -10,8 +10,8 @@
   #define ClearBit(BIT, PORT)  (PORT &= ~(1<<BIT))
   
 // this can be used for bit remapping.
-  #define GetBit(BIT,WORD,AS) (((WORD) & (1<<(BIT)))?(AS):0)
-  #define nGetBit(BIT,WORD,AS) (((WORD) & (1<<(BIT)))?0:(AS))
+  #define GetBit(BIT,WORD,AS) ((((WORD) & (1<<(BIT)))!=0)?(AS):0)
+  #define nGetBit(BIT,WORD,AS) ((((WORD) & (1<<(BIT)))!=0)?0:(AS))
 
 #define RESET_B 15
 #define IOEN_B  14
@@ -40,10 +40,6 @@ uint8_t BuffPtr;
 
 
 
-
-
-#define InitV()        V=   0xE300
-
 #define ResetHigh()    SetBit(RESET_B, V)
 #define ResetLow()     ClearBit(RESET_B, V)
 
@@ -63,6 +59,8 @@ uint8_t BuffPtr;
 #define MEMOELow()     ClearBit(MEMOE_B, V)
 
 #define SetAddr(A)     V = ( (V & 0xCF00) | GetBit(1,A,(1<<A1_B)) | nGetBit(0,A,(1<<A0_B)) | ((A>>2) & 0xFF) ) 
+
+//#define SetAddr(A)     V=(GetBit(1,A,(1<<A1_B))|nGetBit(0,A,(1<<A0_B))|((A>>2)&0xFF)) 
 
 #define SetDBus(D)     V=(V&(0xFF00))|(D&0xFF)
 
@@ -105,24 +103,26 @@ int main( int argc, char ** argv) {
   
   SerWrite(&Port, (uint8_t[]){0x8C, 0x8C, 0x8C, 0x8C, 0x8C, 0x8C, 0x8C, 0x8C}, 8);  // wake up!     
   printf("ACQUIRE-HALT\n"); fflush(stdout);
-  InitV();  send16(V);  // set the system up for programming
+  A = 0;   V = 0;
+  
+  ResetHigh();  IODisable();  A0Low();  A1Low();  MEMWRHigh();  MEMOEHigh(); send16(V);  // set the system up for programming
   A0High(); send16(V);  // make sure higher address bits are latched
   A0Low();  send16(V);  
-  printf("UPLOAD\n"); fflush(stdout);
   
-  A = 0;
+  printf("UPLOAD...\n"); fflush(stdout);
+  
   while( (i = fgetc(Input)) != EOF ) {     
-  
-      b = i;
-      printf ("\r 0x%02X  ",A); fflush(stdout);
-
-      SetDBus(b);
+           
+      SetAddr(A); A0Low(); send16(V);           // send address 
+      A0High();  send16(V);  
+      SetAddr(A);
+	
+      printf ("\r 0x%02X <- %02X ",A, i); fflush(stdout);
+      
+      b = i; SetDBus(b);
       writePulse(); // 2 writes.
 
-      A++;
-        
-      SetAddr(A); send16(V);           // send address      
-           
+      A++;                     
   }
   printf("\nRESET-RELEASE\n");
   SetAddr(0); A0High();  send16(V);   // latch address 0
@@ -137,28 +137,35 @@ int main( int argc, char ** argv) {
   return 0; 
 }
 
-
+// implicit - ok.
 void send8(uint8_t v) {
 
     convertByte(v, 1);        
     SendBuff();
 }
 
-
+// checked - ok.
 void send16(uint16_t v) {
 
-    convertByte((v>>8), 0);          // 
-    convertByte((v&0xFF), 1);        // 
+    convertByte((v>>8), 0);          
+    convertByte((v&0xFF), 1);        
     SendBuff();
 }
 
-
+// checked - ok.
 void writePulse() {
 
-   MEMWRLow();
-   send16(V);
-   MEMWRHigh();
-   send16(V);
+   MEMWRLow();  send16(V);
+   MEMWRHigh(); send16(V);
+
+  
+  // new method, we allow it to follow whatever it wants and here, we stop it, the address will be set on the
+  // next write and at the same time it will start listening again.
+  
+ //  MEMWRHigh();
+ //  send16(V);
+  // MEMWRLow();   
+   
    
 }
 
