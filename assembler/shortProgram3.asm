@@ -1,0 +1,4 @@
+
+Start:
+ NOP
+ HALT

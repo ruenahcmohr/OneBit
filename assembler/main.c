@@ -79,12 +79,13 @@ Tips:
 #define I_NULL 7
 #define O_NULL 7
 
-#define INSTCOUNT 42
+#define INSTCOUNT 53
 // due to other filtering, a semicolon will never be part of the string, so we can use that.
 // search for ;NMEOMONIC;
-char  * MNEMONICS = ";NOP;HALT;SETB;SETBJMP;CSETB;CLRB;CLRBJMP;CCLRB;OUTIN;OUTINJMP;OUTV;OUTVJMP;OUT;OUTI;OUTIJMP;OUTJMP;COUTF;IN;INJMP;INJPS;INJPC;CINF;JMP;JPS;JPC;JPIV;JPINV;JPV;JPNV;FORKF;FORKI;WAITIS;WAITIC;SKIPIC;SKIPIS;SKIPFC;SKIPFS;REPTIC;REPTIS;REPTFC;REPTFS;";
-int  ParamCount[] = {  0,  0,   1,     2,     2,    1,    2,      2,    2,     3,     2,    3,    1,   1,  2,       2,     4,   1,   2,   2,    2,    2,  1,   1,  1, 3,    3,   2,   2,   2,    3,     1,    1,      1,     1,     0,     0,    1,      1,     0,     0  };
-enum InstIdx { NOP = 0,HALT,SETB,SETBJMP,CSETB,CLRB,CLRBJMP,CCLRB,OUTIN,OUTINJMP,OUTV,OUTVJMP,OUT,OUTI,OUTIJMP,OUTJMP,COUTF,IN,INJMP,INJPS,INJPC,CINF,JMP,JPS,JPC,JPIV,JPINV,JPV,JPNV,FORKF,FORKI,WAITIS,WAITIC,SKIPIC,SKIPIS,SKIPFC,SKIPFS,REPTIC,REPTIS,REPTFC,REPTFS };
+// wish list:  WAITICJMP;WAITISJMP;SETBSKIP;CLRBSKIP;
+char  * MNEMONICS = ";NOP;HALT;SETB;SETBJMP;CSETB;CLRB;CLRBJMP;CCLRB;OUTIN;OUTINJMP;OUTV;OUTVJMP;OUT;OUTI;OUTIJMP;OUTJMP;COUTF;IN;INJMP;INJPS;INJPC;CINF;JMP;JPS;JPC;JPIV;JPINV;JPV;JPNV;FORKF;FORKI;WAITIS;WAITIC;SKIPIC;SKIPIS;SKIPFC;SKIPFS;REPTIC;REPTIS;REPTFC;REPTFS;CCBFS;CCBFC;CSBFS;CSBFC;COUTVFC;COUTVFS;CLRBSKIP;SETBSKIP;WAITISJMP;WAITICJMP;JMPT;";
+int  ParamCount[] = {  0,  0,   1,     2,     2,    1,    2,      2,    2,     3,     2,    3,    1,   1,  2,       2,     4,   1,   2,   2,    2,    2,  1,   1,  1, 3,    3,   2,   2,   2,    3,     1,    1,      1,     1,     0,     0,    1,      1,     0,     0,    1,    1,    1,    1,     2,      2,       1,       1,       2,        2,      1  };
+enum InstIdx  {   NOP = 0,HALT,SETB,SETBJMP,CSETB,CLRB,CLRBJMP,CCLRB,OUTIN,OUTINJMP,OUTV,OUTVJMP,OUT,OUTI,OUTIJMP,OUTJMP,COUTF,IN,INJMP,INJPS,INJPC,CINF,JMP,JPS,JPC,JPIV,JPINV,JPV,JPNV,FORKF,FORKI,WAITIS,WAITIC,SKIPIC,SKIPIS,SKIPFC,SKIPFS,REPTIC,REPTIS,REPTFC,REPTFS,CCBFS,CCBFC,CSBFS,CSBFC,COUTVFC,COUTVFS,CLRBSKIP,SETBSKIP,WAITISJMP,WAITICJMP,JMPT };
 
 // construction of the 32 bit instruction.
 typedef struct opcode_s {  
@@ -144,7 +145,7 @@ int main(int argc, char** argv, char *arge[]) {
 int assemble(FILE *input, FILE *out, varlist_t *llabels ) {
   
   char *line = NULL;
-  int lineSize;
+  size_t lineSize;
   char *p;
   
   char *tokLine = NULL;
@@ -235,7 +236,7 @@ int assemble(FILE *input, FILE *out, varlist_t *llabels ) {
    
   }
   
-
+  printf("\n  Program used up %0.2f%% system memory\n\n", (address*100.0)/255.0 );
 
 }
 
@@ -503,12 +504,7 @@ int buildInstruction(opcode_t *OP, char ** strings, uint8_t address, varlist_t *
     break;
 
     case JMP:
-      if ((t = OpAssemble( I_NULL , O_NULL, 1 )) < 0 ) return -1;
-      
-      OP->FInstruction = t;
-      OP->TInstruction = OP->FInstruction;
-      OP->FAddress = v8[1];
-      OP->TAddress = OP->FAddress;  
+      OP->FAddress = OP->TAddress = v8[1];  
     break;
 
     case JPS:
@@ -635,6 +631,72 @@ int buildInstruction(opcode_t *OP, char ** strings, uint8_t address, varlist_t *
 
     case REPTFS:
       OP->TAddress = address-1; 
+    break;
+    
+    case CCBFS:
+      if ((t = OpAssemble( I_NULL , v8[1], 0 )) < 0 ) return -1;
+      OP->TInstruction = t;
+    break;
+
+    case CCBFC:
+      if ((t = OpAssemble( I_NULL , v8[1], 0 )) < 0 ) return -1;
+      OP->FInstruction = t;
+    break;
+
+    case CSBFS:
+      if ((t = OpAssemble( I_NULL , v8[1], 1 )) < 0 ) return -1;
+      OP->TInstruction = t;
+    break;
+
+    case CSBFC:
+      if ((t = OpAssemble( I_NULL , v8[1], 1 )) < 0 ) return -1;
+      OP->FInstruction = t;
+    break;
+
+    case COUTVFC:
+      if ((t = OpAssemble( I_NULL , v8[1], v8[2] )) < 0 ) return -1;      
+      OP->FInstruction = t;   
+    break;
+
+    case COUTVFS:
+      if ((t = OpAssemble( I_NULL , v8[1], v8[2] )) < 0 ) return -1;      
+      OP->TInstruction = t;  
+    break;
+
+    case CLRBSKIP:
+      if ((t = OpAssemble( I_NULL , v8[1], 0 )) < 0 ) return -1;
+
+      OP->TInstruction = OP->FInstruction = t;
+      OP->FAddress = OP->TAddress = address+2;
+    break;
+
+    case SETBSKIP:
+      if ((t = OpAssemble( I_NULL , v8[1], 1 )) < 0 ) return -1;
+
+      OP->TInstruction = OP->FInstruction = t;
+      OP->FAddress = OP->TAddress = address+2;
+    break;
+
+    case WAITISJMP:
+      if ((t = OpAssemble( v8[1] , O_NULL, 1 )) < 0 ) return -1;
+
+      OP->FInstruction = t;
+      OP->TInstruction = OP->FInstruction;
+      OP->FAddress = address;
+      OP->TAddress = v8[2];
+    break;
+
+    case WAITICJMP:
+      if ((t = OpAssemble( v8[1] , O_NULL, 1 )) < 0 ) return -1;
+
+      OP->TInstruction = OP->FInstruction = t;
+      OP->TAddress = address;
+      OP->FAddress = v8[2];
+    break;
+
+    case JMPT:
+      OP->FAddress = v8[1];
+      OP->TAddress = (v8[1] + 1) & 0xFF;  
     break;
 
   
